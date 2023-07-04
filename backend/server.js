@@ -41,11 +41,15 @@ const PORT = process.env.PORT;
 const server = app.listen(PORT, console.log(`Server Started on port ${PORT}`));
 
 //socket
-
+const allowedOrigins = [
+  "http://localhost:4173",
+  "https://dash-chat-five.vercel.app",
+  "http://localhost:5173",
+];
 const io = require("socket.io")(server, {
   pingTimeout: 60000,
   cors: {
-    origin: "http://localhost:4173",
+    origin: allowedOrigins,
   },
 });
 
