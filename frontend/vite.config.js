@@ -8,7 +8,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       "/api": {
-        target: "http://[::1]:5000",
+        target: "https://dashchat-backend.onrender.com/",
         changeOrigin: true,
         secure: false,
       },
@@ -16,3 +16,19 @@ export default defineConfig({
   },
   plugins: [react()],
 });
+
+//dev config
+// export default defineConfig({
+//   server: {
+//     host: true,
+//     port: 5173,
+//     proxy: {
+//       "/api": {
+//         target: "http://[::1]:5000",
+//         changeOrigin: true,
+//         secure: false,
+//       },
+//     },
+//   },
+//   plugins: [react()],
+// });

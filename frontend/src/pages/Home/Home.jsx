@@ -8,7 +8,13 @@ import { useDispatch, useSelector } from "react-redux";
 import { io } from "socket.io-client";
 import { fetchChat } from "../../features/chat/chatSlice";
 import { fetchChats } from "../../features/chats/chatsSlice";
-const ENDPOINT = "http://localhost:5000";
+import Welcome from "../../components/Chat/Welcome";
+
+//dev
+// const ENDPOINT = "http://localhost:5000";
+//production
+const ENDPOINT = "https://dashchat-backend.onrender.com/";
+
 let socket;
 
 const Home = () => {
@@ -36,7 +42,7 @@ const Home = () => {
     // console.log("hi");
     socket.on("notify", (newMessageRecieved) => {
       console.log(chatDetails);
-      if (newMessageRecieved.chat._id !== chatDetails._id) {
+      if (newMessageRecieved.chat._id !== chatDetails?._id) {
         dispatch(fetchChats());
         // console.log("noti");
       } else if (newMessageRecieved.chat._id === messages[0].chat._id) {
@@ -53,7 +59,12 @@ const Home = () => {
         <div className="home">
           <div className="container">
             <Sidebar socket={socket} />
-            <Chat key={chatDetails._id} socket={socket} />
+
+            {chatDetails ? (
+              <Chat key={chatDetails._id} socket={socket} />
+            ) : (
+              <Welcome />
+            )}
           </div>
         </div>
       )}

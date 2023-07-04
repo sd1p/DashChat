@@ -36,7 +36,7 @@ const Messages = ({ socket }) => {
         ? messages.map((message) => (
             <Message key={message._id} message={message} />
           ))
-        : "start a conversation say'hi"}
+        : ""}
       <div ref={messagesEndRef} />
     </div>
   );

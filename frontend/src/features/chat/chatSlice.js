@@ -3,7 +3,7 @@ import axios from "axios";
 
 const initialState = {
   loading: false,
-  chatDetails: {},
+  chatDetails: null,
   status: "offline",
   messages: [],
   error: null,

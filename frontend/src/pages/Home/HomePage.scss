@@ -15,6 +15,7 @@
     @content;
   }
 }
+@import "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap";
 
 $darkColor: #2f2d52;
 
@@ -203,6 +204,19 @@ $darkColor: #2f2d52;
       }
     }
 
+    .welcome {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #ddddf7;
+      font-size: 40px;
+      font-family: "Inter";
+      font-weight: 700px;
+      .typewriter {
+        position: relative;
+        bottom: 140px;
+      }
+    }
     // for chat
     .chat {
       flex: 2.5;
