@@ -1,5 +1,5 @@
 import { useState } from "react";
-import "./loginRegister.scss";
+import "./LoginRegister.scss";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useEffect } from "react";
