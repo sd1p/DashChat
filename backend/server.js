@@ -34,10 +34,10 @@ app.use("/api/message", messageRoutes);
 //   });
 // }
 app.get("/test", (req, res) => {
-  res.json({ message: "success" });
+  res.json({ message: "success  " });
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT;
 const server = app.listen(PORT, console.log(`Server Started on port ${PORT}`));
 
 //socket
