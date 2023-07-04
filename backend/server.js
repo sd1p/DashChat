@@ -35,14 +35,14 @@ app.use("/api/user", userRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/message", messageRoutes);
 
-//Deployment
-// const _dirname = path.resolve();
-// if (process.env.NODE_ENV === "PRODUCTION") {
-//   app.use(express.static(path.join(_dirname, "fontend/dist")));
-//   app.get("*", (req, res) => {
-//     res.sendFile(path.resolve(_dirname, "frontend", "dist", "index.html"));
-//   });
-// }
+// Deployment;
+const _dirname = path.resolve();
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(_dirname, "frontend/dist")));
+  app.get("*", (req, res) => {
+    res.sendFile(path.resolve(_dirname, "frontend", "dist", "index.html"));
+  });
+}
 app.get("/test", (req, res) => {
   res.json({ message: "success  " });
 });
