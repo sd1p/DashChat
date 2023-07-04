@@ -8,7 +8,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "https://dashchat-backend.onrender.com",
+        target: "https://dashchat-backend.onrender.com/",
         changeOrigin: true,
         secure: true,
         ws: true,
