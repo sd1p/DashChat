@@ -11,6 +11,10 @@ exports.isAuthenticated = asyncHandler(async (req, res, next) => {
         _id: decrypetdId.id,
       };
       req.user = await User.findOne(query).select("-password");
+
+      if (req.user === null) {
+        return res.status(400).json({ message: "Protected Route" });
+      }
     }
   } else {
     return res.status(400).json({ message: "Protected Route" });
