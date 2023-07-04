@@ -14,11 +14,12 @@ const app = express();
 
 dotenv.config({ path: "backend/config/.env" });
 
-const allowedOrigins = [
-  "http://localhost:4173",
-  "https://dash-chat-five.vercel.app",
-  "http://localhost:5173",
-];
+// const allowedOrigins = [
+//   "http://localhost:4173",
+//   "https://dash-chat-five.vercel.app",
+//   "http://localhost:5173",
+// ];
+const allowedOrigins = "*";
 connectDB();
 app.use(
   cors({
