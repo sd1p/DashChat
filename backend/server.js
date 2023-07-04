@@ -4,17 +4,18 @@ const userRoutes = require("./routes/userRoutes");
 const chatRoutes = require("./routes/chatRoutes");
 const messageRoutes = require("./routes/messageRoutes");
 const connectDB = require("./config/database");
-const { notFound, errorHandler } = require("./middleware/errorHandler");
+const { errorHandler } = require("./middleware/errorHandler");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
-const { Socket } = require("socket.io");
+const path = require("path");
+const cors = require("cors");
 
 const app = express();
 
 dotenv.config({ path: "backend/config/.env" });
 
 connectDB();
-
+app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -24,10 +25,23 @@ app.use("/api/user", userRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/message", messageRoutes);
 
+//Deployment
+// const _dirname = path.resolve();
+// if (process.env.NODE_ENV === "PRODUCTION") {
+//   app.use(express.static(path.join(_dirname, "fontend/dist")));
+//   app.get("*", (req, res) => {
+//     res.sendFile(path.resolve(_dirname, "frontend", "dist", "index.html"));
+//   });
+// }
+app.get("/test", (req, res) => {
+  res.json({ message: "success" });
+});
+
 const PORT = process.env.PORT || 5000;
 const server = app.listen(PORT, console.log(`Server Started on port ${PORT}`));
 
 //socket
+
 const io = require("socket.io")(server, {
   pingTimeout: 60000,
   cors: {
