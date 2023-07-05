@@ -42,10 +42,11 @@ if (process.env.NODE_ENV === "production") {
   app.get("*", (req, res) => {
     res.sendFile(path.resolve(_dirname, "frontend", "dist", "index.html"));
   });
+} else {
+  app.get("/", (req, res) => {
+    res.json({ message: "api working  " });
+  });
 }
-app.get("/test", (req, res) => {
-  res.json({ message: "success  " });
-});
 
 const PORT = process.env.PORT;
 const server = app.listen(PORT, console.log(`Server Started on port ${PORT}`));
