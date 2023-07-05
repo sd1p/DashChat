@@ -99,7 +99,7 @@ const RegisterPage = () => {
     !user && (
       <div className="formContainer">
         <div className="formWrapper">
-          <span className="logo">Dash Chat</span>
+          <span className="logo">DashChat</span>
           <span className="smTitle">Register</span>
           <form onSubmit={handleSubmit}>
             <input type="text" placeholder="Display Name" />

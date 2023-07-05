@@ -51,13 +51,13 @@ const LoginPage = () => {
     if (auth) {
       navigate("/");
     }
-  }, [user, navigate]);
+  }, [user, auth, navigate]);
 
   return (
     !user && (
       <div className="formContainer">
         <div className="formWrapper">
-          <span className="logo">Dash Chat</span>
+          <span className="logo">DashChat</span>
           <span className="smTitle">Login</span>
           <form onSubmit={handleSubmit}>
             <input type="email" placeholder="Email" />
