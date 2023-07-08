@@ -2,32 +2,24 @@ import Sidebar from "../../components/Sidebar/Sidebar";
 import Chat from "../../components/Chat/Chat";
 import "./HomePage.scss";
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 
 import { io } from "socket.io-client";
-import { fetchChat } from "../../features/chat/chatSlice";
-import { fetchChats } from "../../features/chats/chatsSlice";
+import { appendMessage } from "../../features/chat/chatSlice";
+import { fetchChats, resetNotification } from "../../features/chats/chatsSlice";
 import Welcome from "../../components/Chat/Welcome";
 
 //dev
 // const ENDPOINT = "http://localhost:5000";
 //production
-const ENDPOINT = "https://dashchat-backend.onrender.com/";
+const ENDPOINT = "https://dashchat.onrender.com";
 
 let socket;
 
 const Home = () => {
-  const navigate = useNavigate();
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.user);
-  const { chatDetails, messages } = useSelector((state) => state.currentChat);
-  useEffect(() => {
-    if (!user) {
-      navigate("/login");
-    }
-  }, [user, navigate]);
-
+  const { chatDetails } = useSelector((state) => state.currentChat);
   useEffect(() => {
     socket = io(ENDPOINT);
     if (user._id !== undefined || null) {
@@ -39,16 +31,20 @@ const Home = () => {
   }, [user]);
 
   useEffect(() => {
-    // console.log("hi");
     socket.on("notify", (newMessageRecieved) => {
-      console.log(chatDetails);
-      if (newMessageRecieved.chat._id !== chatDetails?._id) {
-        dispatch(fetchChats());
+      if (chatDetails !== null) {
+        if (newMessageRecieved.chat._id !== chatDetails._id) {
+          // console.log("noti in another chat");
+          dispatch(fetchChats());
+        } else if (newMessageRecieved.chat._id === chatDetails._id) {
+          // console.log("home");
+          dispatch(appendMessage(newMessageRecieved));
+          dispatch(resetNotification(newMessageRecieved.chat._id));
+          // console.log("chat");
+        }
+      } else {
         // console.log("noti");
-      } else if (newMessageRecieved.chat._id === messages[0].chat._id) {
-        console.log("home");
-        dispatch(fetchChat(newMessageRecieved.chat._id));
-        // console.log("chat");
+        dispatch(fetchChats());
       }
     });
   });

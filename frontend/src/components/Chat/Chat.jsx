@@ -7,35 +7,35 @@ import Messages from "./Messages";
 import Input from "./Input";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-// import { io } from "socket.io-client";
 
-// const ENDPOINT = "http://localhost:5000";
-// let socket;
-
+//#TODO: Global state for typing indicator
 const Chat = ({ socket }) => {
   const { user } = useSelector((state) => state.user);
-  const { chatDetails } = useSelector((state) => state.currentChat);
+  const { isGroupChat, users, chatName, _id } = useSelector(
+    (state) => state.currentChat.chatDetails
+  );
   const [isTyping, setIsTyping] = useState(false);
 
-  let chatName = !chatDetails
-    ? ""
-    : chatDetails.isGroupChat === false
-    ? chatDetails.users[0]._id === user._id
-      ? chatDetails.users[1].name
-      : chatDetails.users[0].name
-    : chatDetails.chatName;
+  let chatname =
+    chatName === null || undefined
+      ? ""
+      : !isGroupChat
+      ? users[0]._id === user._id
+        ? users[1].name
+        : users[0].name
+      : chatName;
 
   useEffect(() => {
-    if (chatDetails._id && socket.connected === true) {
-      socket.emit("joinChat", chatDetails._id);
+    if (_id !== undefined || (null && socket.connected === true)) {
+      socket.emit("joinChat", _id);
     }
-  }, [chatDetails, socket]);
+  }, [_id, socket]);
 
   return (
     <>
       <div className="chat">
         <div className="chatInfo">
-          <span>{chatName}</span>
+          <span>{chatname}</span>
           <span className="typing">{isTyping && "typing..."}</span>
           <div className="chatIcons">
             <img src={VidCall} alt="" />
@@ -45,7 +45,7 @@ const Chat = ({ socket }) => {
         </div>
         <Messages />
         <Input
-          key={chatDetails._id}
+          key={_id}
           socket={socket}
           typing={isTyping}
           setIsTyping={setIsTyping}

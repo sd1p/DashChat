@@ -16,22 +16,22 @@ import react from "@vitejs/plugin-react";
 //     },
 //   },
 // });
-export default defineConfig({
-  server: {
-    host: true,
-    proxy: {
-      "/api": {
-        target: "https://dashchat-backend.onrender.com/",
-        changeOrigin: true,
-        secure: false,
-        ws: true,
-      },
-    },
-  },
-  plugins: [react()],
-});
+// export default defineConfig({
+//   server: {
+//     host: true,
+//     proxy: {
+//       "/api": {
+//         target: "https://dashchat-backend.onrender.com/",
+//         changeOrigin: true,
+//         secure: false,
+//         ws: true,
+//       },
+//     },
+//   },
+//   plugins: [react()],
+// });
 
-//dev config
+// dev config
 // export default defineConfig({
 //   server: {
 //     host: true,

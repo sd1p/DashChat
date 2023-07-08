@@ -8,6 +8,7 @@ import { fetchChat } from "../../features/chat/chatSlice";
 import { fetchChats } from "../../features/chats/chatsSlice";
 import { useDispatch, useSelector } from "react-redux";
 
+//#TODO: Implement global socket
 const Input = ({ socket, isTyping, setIsTyping }) => {
   const [message, setMessage] = useState("");
   const [typing, setTyping] = useState(false);

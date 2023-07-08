@@ -41,6 +41,16 @@ const fetchChatDetails = createAsyncThunk(
 const chatSlice = createSlice({
   name: "currentChat",
   initialState,
+  reducers: {
+    appendMessage(state, action) {
+      if (
+        state.messages[state.messages.length - 1]?._id !== action.payload._id &&
+        state.chatDetails._id === action.payload.chat._id
+      ) {
+        state.messages.push(action.payload);
+      }
+    },
+  },
   extraReducers: (builder) => {
     builder.addCase(fetchChat.pending, (state) => {
       state.loading = true;
@@ -68,3 +78,4 @@ const chatSlice = createSlice({
 
 export default chatSlice.reducer;
 export { fetchChat, fetchChatDetails };
+export const { appendMessage } = chatSlice.actions;

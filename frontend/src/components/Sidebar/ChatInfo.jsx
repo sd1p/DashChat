@@ -5,6 +5,7 @@ import timeConversion from "../../utils/timeConversion";
 import { useState } from "react";
 import { useEffect } from "react";
 
+//#TODO: Individual rerenders
 const ChatInfo = ({ chat, handleChatClick }) => {
   const { chatDetails } = useSelector((state) => state.currentChat);
   const { user } = useSelector((state) => state.user);
@@ -50,7 +51,11 @@ const ChatInfo = ({ chat, handleChatClick }) => {
         <span className="time">{time ? time : ""}</span>
 
         <span
-          className={`notification ${notification > 0 ? "unhide" : "hide"}`}
+          className={`notification ${
+            notification > 0 && chatDetails?._id !== chat._id
+              ? "unhide"
+              : "hide"
+          }`}
         >
           {chat.notification > 0 ? chat.notification : ""}
         </span>

@@ -22,7 +22,7 @@ function App() {
         <Route
           path="/*"
           element={
-            <ProtectedRoute auth={user}>
+            <ProtectedRoute user={user}>
               <Home />
             </ProtectedRoute>
           }

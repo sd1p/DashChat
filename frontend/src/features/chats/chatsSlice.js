@@ -13,8 +13,17 @@ const fetchChats = createAsyncThunk("chats/fetchChats", async () => {
 });
 
 const chatsSlice = createSlice({
-  name: "user",
+  name: "chats",
   initialState,
+  reducers: {
+    resetNotification(state, action) {
+      for (const chat of state.chats) {
+        if (chat._id === action.payload) {
+          chat.notification = 0;
+        }
+      }
+    },
+  },
   extraReducers: (builder) => {
     builder.addCase(fetchChats.pending, (state) => {
       state.loading = true;
@@ -33,3 +42,4 @@ const chatsSlice = createSlice({
 
 export default chatsSlice.reducer;
 export { fetchChats };
+export const { resetNotification } = chatsSlice.actions;

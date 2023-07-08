@@ -3,19 +3,25 @@
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchChat, fetchChatDetails } from "../../features/chat/chatSlice";
-import { fetchChats } from "../../features/chats/chatsSlice";
+import { fetchChats, resetNotification } from "../../features/chats/chatsSlice";
 import ChatInfo from "./ChatInfo";
+import axios from "axios";
 
 const Chats = () => {
-  // const { user } = useSelector((state) => state.user);
-  // const { chatDetails } = useSelector((state) => state.currentChat);
   const { chats } = useSelector((state) => state.chats);
+  const { chatDetails } = useSelector((state) => state.currentChat);
   const dispatch = useDispatch();
+
   const handleChatClick = async (e, chat) => {
-    e.preventDefault();
+    if (chatDetails._id) {
+      await axios.get(`api/message/mark-seen/${chatDetails._id}`);
+      dispatch(resetNotification(chatDetails?._id));
+    }
+    dispatch(resetNotification(chat._id));
     dispatch(fetchChatDetails(chat._id));
     dispatch(fetchChat(chat._id));
   };
+
   useEffect(() => {
     dispatch(fetchChats());
   }, [dispatch]);
@@ -27,7 +33,7 @@ const Chats = () => {
           chats.map((chat) => {
             return (
               <ChatInfo
-                key={chat._id}
+                key={chat._id + chat.notification}
                 chat={chat}
                 handleChatClick={handleChatClick}
               />

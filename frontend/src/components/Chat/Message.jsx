@@ -1,14 +1,10 @@
 /* eslint react/prop-types: 0 */
 
 import { useSelector } from "react-redux";
+import timeConversion from "../../utils/timeConversion";
 const Message = ({ message }) => {
   const { user } = useSelector((state) => state.user);
-
-  let time = new Date(message.createdAt);
-  time = time.toLocaleString("en-GB", {
-    timeStyle: "short",
-    hour12: true,
-  });
+  let time = timeConversion(message.createdAt);
 
   return (
     message && (
@@ -27,7 +23,7 @@ const Message = ({ message }) => {
               <p>{message.content}</p> <span>{time}</span>
             </div>
 
-            {/* image in chat */}
+            {/* image in chat handler*/}
           </div>
         </div>
       </>

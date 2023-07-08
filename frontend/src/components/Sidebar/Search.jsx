@@ -3,7 +3,6 @@ import axios from "axios";
 import { useDispatch } from "react-redux";
 import { fetchChat, fetchChatDetails } from "../../features/chat/chatSlice";
 
-//#TODO:createChat
 const Search = () => {
   const dispatch = useDispatch();
   const [searchQuery, setSearchQuery] = useState("");

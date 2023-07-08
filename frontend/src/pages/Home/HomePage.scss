@@ -206,15 +206,23 @@ $darkColor: #2f2d52;
 
     .welcome {
       display: flex;
-      align-items: center;
       justify-content: center;
+      align-items: center;
       background-color: #ddddf7;
       font-size: 40px;
       font-family: "Inter";
       font-weight: 700px;
-      .typewriter {
+      flex-direction: column;
+      .typewriter-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
         position: relative;
-        bottom: 140px;
+        top: -110px;
+        .typewriter {
+          font-size: 30px;
+        }
       }
     }
     // for chat

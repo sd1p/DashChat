@@ -3,7 +3,8 @@ import { useEffect, useRef } from "react";
 import Message from "./Message";
 import { useSelector } from "react-redux";
 
-const Messages = ({ socket }) => {
+//#TODO: Dispatch messages/message when required
+const Messages = () => {
   const messagesEndRef = useRef(null);
   const { messages } = useSelector((state) => state.currentChat);
   const scrollToBottom = () => {
@@ -12,23 +13,6 @@ const Messages = ({ socket }) => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
-  // useEffect(() => {
-  //   if (socket?.connected === true) {
-  //     socket.on("notify", (newMessageRecieved) => {
-  //       console.log(newMessageRecieved);
-  //       if (chatDetails._id == newMessageRecieved.chat._id) {
-  //         //dispatch(fetchChats(chatDetails._id));
-  //         console.log("hi");
-  //         dispatch(fetchChat(chatDetails._id));
-  //       } else {
-  //         console.log("bye");
-  //         dispatch(fetchChats());
-  //         //alternate method mutate messages with newMessage
-  //       }
-  //     });
-  //   }
-  // });
 
   return (
     <div className="messages style-4">
