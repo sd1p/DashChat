@@ -62,3 +62,25 @@ exports.getMessages = asyncHandler(async (req, res) => {
     throw new Error(error.message);
   }
 });
+
+exports.markAsSeen = asyncHandler(async (req, res) => {
+  const { chatId } = req.params;
+  if (!mongoose.isValidObjectId(chatId)) {
+    console.log(chatId);
+    res.status(400).json({ message: "Invalid Chat ID" });
+  }
+  try {
+    const userId = req.user._id;
+    const lastSeenTimestamp = new Date().toISOString();
+
+    const chat = await Chat.findOneAndUpdate(
+      { _id: chatId, users: userId },
+      { $set: { [`lastSeen.${userId}`]: lastSeenTimestamp } },
+      { new: true }
+    );
+    res.status(200).json({ message: `seen ${chatId}` });
+  } catch (error) {
+    console.log(error);
+    throw new Error(error.message);
+  }
+});

@@ -1,10 +1,18 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 
+//email unique✅
+//name change once
+//photo form strat
+//password optional only for jwt
+//provider
+//provider id
+//verified later in future update
+//always send mongoose scheema _id for cookie/session
 const userSchema = mongoose.Schema(
   {
     name: { type: String, required: true },
-    password: { type: String, required: true },
+    password: { type: String },
     email: { type: String, required: true, unique: true },
     photo: {
       type: String,
@@ -12,10 +20,13 @@ const userSchema = mongoose.Schema(
       default:
         "https://icon-library.com/images/anonymous-user-icon/anonymous-user-icon-2.jpg",
     },
+    provider: { type: String, required: true },
+    providerId: { type: String },
   },
   { timestamps: true }
 );
 
+//for jwt method
 userSchema.methods.comparePassword = async function (password) {
   if (password === "") {
     return false;
@@ -27,7 +38,7 @@ userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
     next();
   }
-  this.password = await bcrypt.hash(this.password, 12);
+  this.password = bcrypt.hash(this.password, 12);
 });
 
 module.exports = mongoose.model("User", userSchema);

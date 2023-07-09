@@ -10,9 +10,9 @@ import { fetchChats, resetNotification } from "../../features/chats/chatsSlice";
 import Welcome from "../../components/Chat/Welcome";
 
 //dev
-// const ENDPOINT = "http://localhost:5000";
+const ENDPOINT = "http://localhost:5000";
 //production
-const ENDPOINT = "https://dashchat.onrender.com";
+// const ENDPOINT = "https://dashchat.onrender.com";
 
 let socket;
 

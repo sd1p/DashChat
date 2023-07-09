@@ -9,31 +9,53 @@ const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
 const path = require("path");
 const cors = require("cors");
-
+const session = require("express-session");
+const MongoStore = require("connect-mongo");
+const passport = require("passport");
 const app = express();
 
 dotenv.config({ path: "backend/config/.env" });
 
+//db setup
+connectDB();
+
+const sessionStore = new MongoStore({
+  mongoUrl: process.env.MONGODB_URI,
+  collectionName: "sessions",
+});
+
 // const allowedOrigins = [
 //   "http://localhost:4173",
-//   "https://dash-chat-five.vercel.app",
 //   "http://localhost:5173",
 // ];
+
+//middlewares
 const allowedOrigins = "*";
-connectDB();
 app.use(
   cors({
     origin: allowedOrigins,
   })
 );
+
+app.use(
+  session({
+    secret: "decide",
+    resave: false,
+    saveUninitialized: true,
+    store: sessionStore,
+  })
+);
 app.use(express.json());
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: false }));
+app.use(passport.initialize());
+app.use(passport.session());
 // app.use(notFound);
 app.use(errorHandler);
 app.use("/api/user", userRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/message", messageRoutes);
+// app.use("/api/auth", messageRoutes);
 
 // Deployment;
 const _dirname = path.resolve();

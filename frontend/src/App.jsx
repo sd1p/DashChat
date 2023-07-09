@@ -7,7 +7,6 @@ import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchUser } from "./features/user/userSlice";
 import ProtectedRoute from "./pages/Home/ProtectedRoute";
-import ChatInfo from "./components/Sidebar/ChatInfo";
 
 function App() {
   const dispatch = useDispatch();

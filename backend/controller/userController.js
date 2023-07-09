@@ -86,6 +86,7 @@ exports.findChats = asyncHandler(async (req, res) => {
   res.send(users);
 });
 
+//to be changed for google stratergy
 exports.authUser = asyncHandler(async (req, res) => {
   if (!req.user) {
     return res.status(200).json({ auth: false, user: null });
