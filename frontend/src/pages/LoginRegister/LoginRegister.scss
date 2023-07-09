@@ -1,8 +1,8 @@
 $primaryBackbgroundColor: #a7bcff;
 
 .formContainer {
-  background-color: $primaryBackbgroundColor;
-  background-image: url("/background.svg");
+  background-color: #2b303e;
+  // background-image: url("/background.svg");
   background-size: cover;
   height: 100vh;
   display: flex;
@@ -10,14 +10,14 @@ $primaryBackbgroundColor: #a7bcff;
   justify-content: center;
 
   .formWrapper {
-    background-color: #fff;
+    background-color: #ffffff;
     padding: 20px 60px;
     border-radius: 10px;
     display: flex;
     flex-direction: column;
     gap: 10px;
     align-items: center;
-    box-shadow: 0px 0 5px 10px #8aa5ff;
+    box-shadow: 0px 0 5px 10px #484f67;
 
     .logo {
       font-weight: bold;
