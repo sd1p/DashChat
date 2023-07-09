@@ -8,33 +8,39 @@ const bcrypt = require("bcrypt");
 //provider
 //provider id
 //verified later in future update
-//always send mongoose scheema _id for cookie/session
+//always send mongoose user _id for cookie/session
+//OPTIONAL
+// provider: { type: String, required: true },
+// providerId: { type: String },
 const userSchema = mongoose.Schema(
   {
     name: { type: String, required: true },
     password: { type: String },
-    email: { type: String, required: true, unique: true },
+    email: { type: String, unique: true },
     photo: {
       type: String,
       required: true,
       default:
         "https://icon-library.com/images/anonymous-user-icon/anonymous-user-icon-2.jpg",
     },
-    provider: { type: String, required: true },
-    providerId: { type: String },
+    provider: { type: String },
+    providerID: { type: String },
   },
   { timestamps: true }
 );
 
 //for jwt method
 userSchema.methods.comparePassword = async function (password) {
-  if (password === "") {
+  if (password === "" || !password) {
     return false;
   }
   return bcrypt.compare(password, this.password);
 };
 
 userSchema.pre("save", async function (next) {
+  if (!this.password) {
+    next();
+  }
   if (!this.isModified("password")) {
     next();
   }

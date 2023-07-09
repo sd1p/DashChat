@@ -4,7 +4,8 @@ const User = require("../model/userModel");
 
 exports.isAuthenticated = asyncHandler(async (req, res, next) => {
   const token = req.cookies.token;
-  if (token) {
+  if (req.session.passport?.user) {
+  } else if (token) {
     const decrypetdId = jwt.verify(token, process.env.JWT_SECRET);
     if (decrypetdId) {
       const query = {

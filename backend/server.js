@@ -3,6 +3,7 @@ const dotenv = require("dotenv");
 const userRoutes = require("./routes/userRoutes");
 const chatRoutes = require("./routes/chatRoutes");
 const messageRoutes = require("./routes/messageRoutes");
+const authRoutesHelper = require("./routes/authRoutes");
 const connectDB = require("./config/database");
 const { errorHandler } = require("./middleware/errorHandler");
 const cookieParser = require("cookie-parser");
@@ -50,12 +51,15 @@ app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(passport.initialize());
 app.use(passport.session());
-// app.use(notFound);
 app.use(errorHandler);
+
+//configuring passport.js
+require("./config/passport")(passport);
+const authRoutes = authRoutesHelper(passport);
 app.use("/api/user", userRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/message", messageRoutes);
-// app.use("/api/auth", messageRoutes);
+app.use("/api/auth", authRoutes);
 
 // Deployment;
 const _dirname = path.resolve();

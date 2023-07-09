@@ -98,6 +98,13 @@ exports.authUser = asyncHandler(async (req, res) => {
 exports.userLogout = asyncHandler(async (req, res) => {
   if (req.cookies.token) {
     res.status(200).clearCookie("token").json({ message: "Logged Out" });
+  } else if (req.session.passport.user) {
+    req.logout(function (err) {
+      if (err) {
+        return next(err);
+      }
+      res.redirect("/login");
+    });
   } else {
     res.status(200).json({ message: "Already logged Out" });
   }
