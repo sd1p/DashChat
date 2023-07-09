@@ -12,11 +12,12 @@ const Navbar = () => {
     try {
       const { data } = await axios.get("api/user/logout");
       dispatch(fetchUser());
-      navigate("/login");
+      navigate("/login", { replace: true });
       console.log(data.message);
     } catch (error) {
       console.log(error);
     }
+    navigate("/login");
   };
 
   return (

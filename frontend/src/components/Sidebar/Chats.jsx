@@ -13,7 +13,7 @@ const Chats = () => {
   const dispatch = useDispatch();
 
   const handleChatClick = async (e, chat) => {
-    if (chatDetails._id) {
+    if (chatDetails?._id) {
       await axios.get(`api/message/mark-seen/${chatDetails._id}`);
       dispatch(resetNotification(chatDetails?._id));
     }

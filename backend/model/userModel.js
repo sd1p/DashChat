@@ -38,13 +38,12 @@ userSchema.methods.comparePassword = async function (password) {
 };
 
 userSchema.pre("save", async function (next) {
-  if (!this.password) {
-    next();
-  }
   if (!this.isModified("password")) {
     next();
   }
-  this.password = bcrypt.hash(this.password, 12);
+  if (this.password) {
+    this.password = bcrypt.hash(this.password, 12);
+  }
 });
 
 module.exports = mongoose.model("User", userSchema);

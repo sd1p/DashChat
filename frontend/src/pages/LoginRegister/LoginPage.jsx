@@ -7,7 +7,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchUser } from "./../../features/user/userSlice";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
+import githubIcon from "../../img/github-logo.png";
+import googleIcon from "../../img/google-logo.png";
 const LoginPage = () => {
   const { user, auth } = useSelector((state) => state.user);
   const dispatch = useDispatch();
@@ -18,13 +19,23 @@ const LoginPage = () => {
     setShow(!show);
   };
 
+  const signInWithGoogle = () => {
+    window.open("/api/auth/google", "_self");
+  };
+  // const signInWithGoogle = () => {
+  //   window.open("http://localhost:5000/api/auth/google/", "_self");
+  // };
+  const signInWithGithub = () => {
+    window.open("/api/auth/github", "_self");
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const email = e.target[0].value;
     const password = e.target[1].value;
 
     try {
-      const { data } = await axios.post(
+      await axios.post(
         "/api/user/login",
         { email, password },
         { headers: { "Content-Type": "application/json" } }
@@ -79,6 +90,16 @@ const LoginPage = () => {
 
             <button type="submit">Sign In</button>
           </form>
+          <div className="stratergy">
+            <div className="google btn" onClick={signInWithGoogle}>
+              <img src={googleIcon} alt="Google" />
+              <p>Google</p>
+            </div>
+            <div className="github btn" onClick={signInWithGithub}>
+              <img src={githubIcon} alt="GitHub" />
+              <p>Github</p>
+            </div>
+          </div>
           <p>
             You don&apos;t have an account? <Link to="/register">Register</Link>
           </p>

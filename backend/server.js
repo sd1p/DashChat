@@ -40,7 +40,7 @@ app.use(
 
 app.use(
   session({
-    secret: "decide",
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: true,
     store: sessionStore,
