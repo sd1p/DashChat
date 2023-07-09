@@ -31,34 +31,34 @@ import react from "@vitejs/plugin-react";
 //   plugins: [react()],
 // });
 
-//prod
-// export default defineConfig({
-//   server: {
-//     host: true,
-//     proxy: {
-//       "/api": {
-//         target: "https://dashchat.onrender.com/",
-//         changeOrigin: true,
-//         secure: false,
-//         ws: true,
-//       },
-//     },
-//   },
-//   plugins: [react()],
-// });
-
-// dev config
+// prod
 export default defineConfig({
   server: {
     host: true,
-    port: 5173,
     proxy: {
       "/api": {
-        target: "http://[::1]:5000",
+        target: "https://dashchat.onrender.com/",
         changeOrigin: true,
         secure: false,
+        ws: true,
       },
     },
   },
   plugins: [react()],
 });
+
+// // dev config
+// export default defineConfig({
+//   server: {
+//     host: true,
+//     port: 5173,
+//     proxy: {
+//       "/api": {
+//         target: "http://[::1]:5000",
+//         changeOrigin: true,
+//         secure: false,
+//       },
+//     },
+//   },
+//   plugins: [react()],
+// });
