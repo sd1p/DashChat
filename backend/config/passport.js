@@ -22,7 +22,8 @@ module.exports = (passport) => {
       {
         clientID: process.env.GoogleClientID,
         clientSecret: process.env.GoogleClientSecret,
-        callbackURL: "/api/auth/google/callback",
+        callbackURL:
+          "/api/auth/google/callbackhttps://dashchat.onrender.com/api/auth/google/callback",
         // passReqToCallback: true, // allows us to pass in the req from our router.
       },
       async (req, token, refreshToken, profile, done) => {
