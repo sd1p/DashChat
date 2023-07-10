@@ -8,6 +8,7 @@ import { io } from "socket.io-client";
 import { appendMessage } from "../../features/chat/chatSlice";
 import { fetchChats, resetNotification } from "../../features/chats/chatsSlice";
 import Welcome from "../../components/Chat/Welcome";
+import { Helmet } from "react-helmet";
 
 //dev
 // const ENDPOINT = "http://localhost:5000";
@@ -53,6 +54,10 @@ const Home = () => {
     <>
       {user && (
         <div className="home">
+          <Helmet>
+            <title>DashChat</title>
+            <meta name="description" content="A real-time chat app" />
+          </Helmet>
           <div className="container">
             <Sidebar socket={socket} />
 

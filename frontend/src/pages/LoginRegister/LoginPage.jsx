@@ -9,6 +9,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import githubIcon from "../../img/github-logo.png";
 import googleIcon from "../../img/google-logo.png";
+import { Helmet } from "react-helmet";
 const LoginPage = () => {
   const { user, auth } = useSelector((state) => state.user);
   const dispatch = useDispatch();
@@ -67,6 +68,10 @@ const LoginPage = () => {
   return (
     !user && (
       <div className="formContainer">
+        <Helmet>
+          <title>LogIn</title>
+          <meta name="description" content="A real-time chat app" />
+        </Helmet>
         <div className="formWrapper">
           <span className="logo">DashChat</span>
           <span className="smTitle">Login</span>

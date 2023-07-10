@@ -7,6 +7,9 @@ import { fetchUser } from "./../../features/user/userSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { Helmet } from "react-helmet";
+import githubIcon from "../../img/github-logo.png";
+import googleIcon from "../../img/google-logo.png";
 
 const RegisterPage = () => {
   const { user } = useSelector((state) => state.user);
@@ -18,6 +21,16 @@ const RegisterPage = () => {
 
   const handleShow = () => {
     setShow(!show);
+  };
+
+  const signInWithGoogle = () => {
+    window.open("/api/auth/google", "_self");
+  };
+  // const signInWithGoogle = () => {
+  //   window.open("http://localhost:5000/api/auth/google/", "_self");
+  // };
+  const signInWithGithub = () => {
+    window.open("/api/auth/github", "_self");
   };
 
   const handleSubmit = async (e) => {
@@ -33,7 +46,7 @@ const RegisterPage = () => {
         },
       };
 
-      const { data } = await axios.post(
+      await axios.post(
         "/api/user/register",
         { name, email, password, photo },
         config
@@ -98,6 +111,10 @@ const RegisterPage = () => {
   return (
     !user && (
       <div className="formContainer">
+        <Helmet>
+          <title>Register</title>
+          <meta name="description" content="A real-time chat app" />
+        </Helmet>
         <div className="formWrapper">
           <span className="logo">DashChat</span>
           <span className="smTitle">Register</span>
@@ -127,6 +144,16 @@ const RegisterPage = () => {
             </label>
             <button type="submit">Sign Up</button>
           </form>
+          <div className="stratergy">
+            <div className="google btn" onClick={signInWithGoogle}>
+              <img src={googleIcon} alt="Google" />
+              <p>Google</p>
+            </div>
+            <div className="github btn" onClick={signInWithGithub}>
+              <img src={githubIcon} alt="GitHub" />
+              <p>Github</p>
+            </div>
+          </div>
           <p>
             You do have an account? <Link to="/login">Login</Link>
           </p>
