@@ -31,6 +31,7 @@ const sessionStore = new MongoStore({
 // ];
 
 //middlewares
+app.enable("trust proxy");
 const allowedOrigins = "*";
 app.use(
   cors({
