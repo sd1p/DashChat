@@ -13,7 +13,7 @@ import { Helmet } from "react-helmet";
 //dev
 // const ENDPOINT = "http://localhost:5000";
 //production
-const ENDPOINT = "https://dashchat.onrender.com";
+const ENDPOINT = window.location.host;
 
 let socket;
 

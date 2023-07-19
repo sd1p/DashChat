@@ -45,7 +45,9 @@ const RegisterPage = () => {
           "Content-Type": "application/json",
         },
       };
-
+      if (photo === false) {
+        setPhoto(`https://ui-avatars.com/api/?background=random&name=${name}`);
+      }
       await axios.post(
         "/api/user/register",
         { name, email, password, photo },
