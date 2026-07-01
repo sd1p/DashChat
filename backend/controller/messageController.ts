@@ -1,5 +1,6 @@
 import asyncHandler from "express-async-handler";
 import prisma from "../config/prisma";
+import { assertChatMember } from "../lib/chatAccess";
 
 // Mark a chat read for a user by pointing their read receipt at the newest
 // message (replaces the old lastSeen timestamp map; id-based avoids boundary
@@ -24,6 +25,8 @@ export const sendMessage = asyncHandler(async (req, res) => {
     res.status(400).json({ message: "Provide valid content and chatId" });
     return;
   }
+
+  if (!(await assertChatMember(chatId, req.user!.id, res))) return;
 
   const created = await prisma.message.create({
     data: { content, chatId, senderId: req.user!.id },
@@ -58,13 +61,15 @@ export const getMessages = asyncHandler(async (req, res) => {
     return;
   }
 
+  if (!(await assertChatMember(chatId, req.user!.id, res))) return;
+
   const messages = await prisma.message.findMany({
     where: { chatId },
     include: { sender: true, chat: true },
     orderBy: { createdAt: "asc" },
   });
 
-  if (req.user) await markChatRead(chatId, req.user.id);
+  await markChatRead(chatId, req.user!.id);
 
   res.status(200).json({ messages });
 });
@@ -75,6 +80,7 @@ export const markAsSeen = asyncHandler(async (req, res) => {
     res.status(400).json({ message: "chatId is required" });
     return;
   }
-  if (req.user) await markChatRead(chatId, req.user.id);
+  if (!(await assertChatMember(chatId, req.user!.id, res))) return;
+  await markChatRead(chatId, req.user!.id);
   res.status(200).json({ message: `seen ${chatId}` });
 });

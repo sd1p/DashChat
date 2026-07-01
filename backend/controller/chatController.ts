@@ -1,6 +1,7 @@
 import asyncHandler from "express-async-handler";
 import { Prisma } from "@prisma/client";
 import prisma from "../config/prisma";
+import { assertChatMember } from "../lib/chatAccess";
 
 // Standard include to hydrate a chat for the API response.
 const chatInclude = {
@@ -228,6 +229,9 @@ export const getChatDetails = asyncHandler(async (req, res) => {
     res.status(400).json({ message: "chatId is required" });
     return;
   }
+
+  if (!(await assertChatMember(chatId, req.user!.id, res))) return;
+
   const chat = await prisma.chat.findUnique({
     where: { id: chatId },
     include: chatInclude,
