@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Video, UserPlus, MoreVertical } from "lucide-react";
+import { ArrowLeft, Video, UserPlus, MoreVertical } from "lucide-react";
 import Messages from "./Messages";
 import Input from "./Input";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { useChatDetails, useSelectedChat, useUser } from "@/queries";
 import type { AppSocket } from "@/socket";
 import type { Message } from "@/api";
@@ -16,10 +18,14 @@ interface ChatProps {
 }
 
 // Ported from _legacy/src/components/Chat/Chat.tsx. Chat details come from
-// useChatDetails(selectedChatId) (was currentChat.chatDetails). Room-join now
-// lives in useChatSocket; here we just own the typing indicator + header.
+// useChatDetails(selectedChatId). Room-join lives in useChatSocket; here we own
+// the typing indicator + header.
+//
+// Redesigned as a shadcn-style conversation pane: a header with a mobile back
+// button (clears the selection to return to the sidebar list), the peer avatar,
+// title + presence line, and ghost icon actions.
 const Chat = ({ socket, emitNewMessage, emitTyping, emitNotTyping }: ChatProps) => {
-  const { selectedChatId } = useSelectedChat();
+  const { selectedChatId, selectChat } = useSelectedChat();
   const { data: user } = useUser();
   const { data: chatDetails } = useChatDetails(selectedChatId);
   const [isTyping, setIsTyping] = useState(false);
@@ -37,22 +43,89 @@ const Chat = ({ socket, emitNewMessage, emitTyping, emitNotTyping }: ChatProps) 
     };
   }, [socket]);
 
-  if (!selectedChatId || !chatDetails) return null;
+  // Only bail when there is genuinely no selection. While the details are still
+  // loading we DON'T return null — that would drop to the parent's plain white
+  // background and flash a white "splash" before the chat mounts. Instead the
+  // themed pane renders immediately with a header skeleton.
+  if (!selectedChatId) return null;
 
-  const { isGroupChat, users, chatName } = chatDetails;
+  const isGroupChat = chatDetails?.isGroupChat ?? false;
+  const users = chatDetails?.users ?? [];
+  const chatName = chatDetails?.chatName;
   const peer = users.find((u) => u.id !== user?.id) ?? users[0];
-  const title = !chatName ? "" : !isGroupChat ? peer?.name ?? "" : chatName;
+  const title = !chatName ? peer?.name ?? "" : !isGroupChat ? peer?.name ?? "" : chatName;
+  const avatar = isGroupChat ? users[0]?.photo : peer?.photo;
+  const isLoading = !chatDetails;
 
   return (
-    <div className="flex flex-[2.5] flex-col">
-      <div className="flex h-[50px] items-center bg-[#5d5b8d] px-2.5 text-gray-200">
-        <span>{title}</span>
-        <span className="m-auto text-sm italic">{isTyping && "typing..."}</span>
-        <div className="ml-auto flex gap-2.5">
-          <Video className="size-[22px] cursor-pointer" />
-          <UserPlus className="size-[22px] cursor-pointer" />
-          <MoreVertical className="size-[22px] cursor-pointer" />
-        </div>
+    <div className="flex h-full min-w-0 flex-1 flex-col bg-[#ddddf7]">
+      {/* Header */}
+      <div className="flex h-14 shrink-0 items-center gap-3 border-b border-black/10 bg-brand-dark px-3 text-[#ddddf7]">
+        {/* Back to the conversation list — mobile only. */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => selectChat(null)}
+          className="size-9 shrink-0 text-[#ddddf7] hover:bg-white/10 hover:text-white md:hidden"
+          aria-label="Back to chats"
+        >
+          <ArrowLeft className="size-5" />
+        </Button>
+
+        {isLoading ? (
+          <>
+            <div className="size-9 shrink-0 animate-pulse rounded-full bg-white/10" />
+            <div className="min-w-0 flex-1">
+              <div className="h-4 w-32 max-w-[50%] animate-pulse rounded bg-white/10" />
+            </div>
+          </>
+        ) : (
+          <>
+            <Avatar className="size-9 shrink-0">
+              <AvatarImage src={avatar} alt={title} />
+              <AvatarFallback className="bg-brand-sidebar text-sm text-white">
+                {title?.[0]?.toUpperCase() ?? "?"}
+              </AvatarFallback>
+            </Avatar>
+
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-white">{title}</p>
+              <p className="h-4 truncate text-xs text-brand-accent">
+                {isTyping ? "typing…" : ""}
+              </p>
+            </div>
+          </>
+        )}
+
+        {/* Group-only actions — a 1-on-1 chat has no call / add-people / menu. */}
+        {!isLoading && isGroupChat && (
+          <div className="flex shrink-0 items-center gap-0.5">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-9 text-[#ddddf7] hover:bg-white/10 hover:text-white"
+              aria-label="Start video call"
+            >
+              <Video className="size-[18px]" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-9 text-[#ddddf7] hover:bg-white/10 hover:text-white"
+              aria-label="Add people"
+            >
+              <UserPlus className="size-[18px]" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-9 text-[#ddddf7] hover:bg-white/10 hover:text-white"
+              aria-label="More options"
+            >
+              <MoreVertical className="size-[18px]" />
+            </Button>
+          </div>
+        )}
       </div>
 
       <Messages />

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Paperclip, Image as ImageIcon } from "lucide-react";
+import { Paperclip, Image as ImageIcon, SendHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSendMessage } from "@/queries";
 import type { AppSocket } from "@/socket";
@@ -70,29 +70,42 @@ const Input = ({
   return (
     <form
       onSubmit={handleSend}
-      className="flex h-[50px] items-center justify-between gap-2.5 bg-white px-2.5"
+      className="flex shrink-0 items-center gap-2 border-t border-black/10 bg-white p-3"
     >
+      <div className="flex items-center gap-1 text-gray-400">
+        <input type="file" id="img" className="hidden" />
+        <label
+          htmlFor="img"
+          className="flex size-9 cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-gray-100 hover:text-gray-600"
+          aria-label="Attach image"
+        >
+          <ImageIcon className="size-[18px]" />
+        </label>
+        <span
+          className="flex size-9 cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-gray-100 hover:text-gray-600"
+          aria-label="Attach file"
+        >
+          <Paperclip className="size-[18px]" />
+        </span>
+      </div>
+
       <input
         type="text"
-        placeholder="Type something..."
+        placeholder="Type a message…"
         value={message}
         onChange={handleTyping}
-        className="w-full border-none text-lg text-[#2f2d52] outline-none placeholder:text-gray-300"
+        className="h-10 min-w-0 flex-1 rounded-full bg-gray-100 px-4 text-sm text-[#2f2d52] outline-none transition-colors placeholder:text-gray-400 focus:bg-gray-50 focus:ring-2 focus:ring-brand-accent/50"
       />
-      <div className="flex items-center gap-2.5">
-        <Paperclip className="size-6 cursor-pointer text-gray-500" />
-        <input type="file" id="img" className="hidden" />
-        <label htmlFor="img">
-          <ImageIcon className="size-6 cursor-pointer text-gray-500" />
-        </label>
-        <Button
-          type="submit"
-          disabled={sendMessage.isPending}
-          className="bg-[#8da4f1] text-white hover:bg-[#8da4f1]/90"
-        >
-          Send
-        </Button>
-      </div>
+
+      <Button
+        type="submit"
+        size="icon"
+        disabled={sendMessage.isPending || !message.trim()}
+        className="size-10 shrink-0 rounded-full bg-[#8da4f1] text-white hover:bg-[#8da4f1]/90"
+        aria-label="Send message"
+      >
+        <SendHorizontal className="size-[18px]" />
+      </Button>
     </form>
   );
 };

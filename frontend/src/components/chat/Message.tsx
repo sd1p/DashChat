@@ -1,50 +1,89 @@
 "use client";
 
 import timeConversion from "@/utils/timeConversion";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/queries";
 import type { Message as MessageType } from "@/api";
 
 interface MessageProps {
   message: MessageType;
+  /** In group chats we label peer bubbles with the sender's name. */
+  isGroupChat?: boolean;
+  /** First message of a run from the same sender — gets the little tail. */
+  startsRun?: boolean;
 }
 
-// Ported from _legacy/src/components/Chat/Message.tsx. Owner bubbles sit on the
-// right (#8da4f1, white text); peer bubbles on the left (white). Same as the
-// old .message / .message.owner SCSS.
-const Message = ({ message }: MessageProps) => {
+// A small palette of stable colors for group-sender name labels, keyed off the
+// sender id so a given person keeps the same color.
+const NAME_COLORS = [
+  "#5d5b8d",
+  "#8da4f1",
+  "#7f66ff",
+  "#c06fd6",
+  "#5b8def",
+  "#6f8fb3",
+];
+const nameColor = (id: string | null | undefined) => {
+  if (!id) return NAME_COLORS[0];
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) | 0;
+  return NAME_COLORS[Math.abs(hash) % NAME_COLORS.length];
+};
+
+// Ported from _legacy/src/components/Chat/Message.tsx. WhatsApp-style layout —
+// no avatars in the thread, bubbles hug their side with a small tail on the
+// first of a run, time inline at the bottom-right — but using the app's brand
+// palette: own messages on the accent (#8da4f1), peers on white.
+const Message = ({ message, isGroupChat, startsRun }: MessageProps) => {
   const { data: user } = useUser();
   const time = timeConversion(message.createdAt);
   const isOwner = message.sender?.id === user?.id;
+  const showName = isGroupChat && !isOwner && startsRun;
 
   return (
-    <div className={cn("flex items-end gap-2", isOwner && "flex-row-reverse")}>
-      <Avatar className="size-10">
-        <AvatarImage src={message.sender?.photo} alt={message.sender?.name ?? ""} />
-        <AvatarFallback className="text-[11px]">
-          {message.sender?.name?.[0]?.toUpperCase() ?? "?"}
-        </AvatarFallback>
-      </Avatar>
-
+    <div
+      className={cn(
+        "flex px-1",
+        isOwner ? "justify-end" : "justify-start",
+        startsRun ? "mt-2" : "mt-0.5",
+      )}
+    >
       <div
         className={cn(
-          "relative my-2.5 max-w-[65%] rounded-[0_10px_10px_10px] bg-white px-5 py-2.5 pr-14",
-          isOwner && "rounded-[10px_0_10px_10px] bg-[#8da4f1]",
+          "relative max-w-[85%] rounded-lg px-2.5 py-1.5 text-sm shadow-sm sm:max-w-[65%]",
+          isOwner ? "bg-[#8da4f1] text-white" : "bg-white text-[#2f2d52]",
+          // Square off the top corner on the tail side for the first of a run.
+          startsRun && (isOwner ? "rounded-tr-none" : "rounded-tl-none"),
         )}
       >
-        <p
-          className={cn(
-            "m-0 break-words text-[#2f2d52]",
-            isOwner && "text-white",
-          )}
-        >
-          {message.content}
-        </p>
+        {/* CSS tail — a small triangle poking out of the top corner. */}
+        {startsRun && (
+          <span
+            aria-hidden
+            className={cn(
+              "absolute top-0 h-0 w-0 border-[6px] border-transparent",
+              isOwner
+                ? "-right-[6px] border-l-[#8da4f1] border-t-[#8da4f1]"
+                : "-left-[6px] border-r-white border-t-white",
+            )}
+          />
+        )}
+
+        {showName && (
+          <span
+            className="mb-0.5 block text-xs font-semibold"
+            style={{ color: nameColor(message.sender?.id) }}
+          >
+            {message.sender?.name}
+          </span>
+        )}
+
+        {/* Text with the inline time floated to the end so it wraps naturally. */}
+        <span className="break-words leading-relaxed">{message.content}</span>
         <span
           className={cn(
-            "absolute bottom-1 right-2 text-[10px] text-gray-500",
-            isOwner && "text-white/80",
+            "float-right ml-2 mt-1 translate-y-0.5 text-[10px]",
+            isOwner ? "text-white/70" : "text-gray-400",
           )}
         >
           {time}

@@ -20,8 +20,12 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider afterSignOutUrl="/login">
-      <html lang="en">
-        <body className="antialiased">
+      {/* suppressHydrationWarning: browser extensions (ColorZilla, Grammarly,
+          etc.) inject attributes like `cz-shortcut-listen` onto <html>/<body>
+          before React hydrates, which would otherwise trip a hydration
+          mismatch. This suppresses the warning for these two elements only. */}
+      <html lang="en" suppressHydrationWarning>
+        <body className="antialiased" suppressHydrationWarning>
           <Providers>{children}</Providers>
         </body>
       </html>
