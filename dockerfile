@@ -1,15 +1,19 @@
-FROM node:18.16-alpine3.18
+FROM oven/bun:1-alpine
 
 WORKDIR /usr/src/app
 
-COPY package*.json ./
+COPY package.json bun.lock ./
 
-RUN npm install
+RUN bun install --frozen-lockfile
 
 COPY . .
 
-RUN  cd frontend && npm install && npm run build
+# Generate the Prisma client, then compile the TypeScript backend to dist/.
+# This image is the API-only backend (Express + Socket.IO + Prisma). The
+# frontend is built and served by its own image (frontend/Dockerfile).
+RUN bun run prisma:generate && bun run build
 
-EXPOSE 5000
+# Backend listens on PORT (defaults to 5001 in config); expose it.
+EXPOSE 5001
 
-CMD [ "node", "backend/server.js" ]
+CMD [ "bun", "dist/server.js" ]

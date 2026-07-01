@@ -1,0 +1,121 @@
+// Prisma schema for DashChat — relational port of the original Mongoose models.
+// UUID primary keys; "unread" tracked via a last-read message pointer (not a
+// timestamp), which avoids clock/boundary bugs and is indexable/joinable.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // Connection URL lives in prisma.config.ts (CLI/migrations) and is passed to
+  // PrismaClient via the pg driver adapter at runtime — see backend/config/prisma.js.
+  // Prisma 7 removed `url` from this block.
+}
+
+// ============================================================
+// USER  (was backend/model/userModel.js)
+// ============================================================
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  clerkId   String   @unique
+  name      String
+  email     String?
+  photo     String   @default("https://icon-library.com/images/anonymous-user-icon/anonymous-user-icon-2.jpg")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // relations
+  chats        ChatUser[]
+  messages     Message[]
+  adminOfChats Chat[]     @relation("ChatAdmin")
+  reads        ChatRead[]
+
+  @@map("users")
+}
+
+// ============================================================
+// CHAT  (was backend/model/chatModel.js)
+// ============================================================
+model Chat {
+  id          String   @id @default(uuid()) @db.Uuid
+  chatName    String?
+  isGroupChat Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // groupAdmin -> User (nullable; survives admin deletion)
+  groupAdminId String? @db.Uuid
+  groupAdmin   User?   @relation("ChatAdmin", fields: [groupAdminId], references: [id], onDelete: SetNull)
+
+  // latestMessage -> Message (nullable; circular ref resolved by Prisma)
+  latestMessageId String?  @unique @db.Uuid
+  latestMessage   Message? @relation("LatestMessage", fields: [latestMessageId], references: [id], onDelete: SetNull)
+
+  // chat.users array  ->  join rows
+  users    ChatUser[]
+  // chat.lastSeen map  ->  per-user read pointer
+  reads    ChatRead[]
+  // all messages in this chat
+  messages Message[]  @relation("ChatMessages")
+
+  @@index([groupAdminId])
+  @@map("chats")
+}
+
+// ============================================================
+// chat.users[]  ->  many-to-many membership
+// ============================================================
+model ChatUser {
+  chatId   String   @db.Uuid
+  userId   String   @db.Uuid
+  joinedAt DateTime @default(now())
+
+  chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([chatId, userId])
+  @@index([userId]) // "which chats is user X in"
+  @@map("chat_users")
+}
+
+// ============================================================
+// chat.lastSeen { userId: ts }  ->  read receipt by message id
+// ============================================================
+model ChatRead {
+  chatId            String  @db.Uuid
+  userId            String  @db.Uuid
+  lastReadMessageId String? @db.Uuid // NULL = nothing read yet
+
+  chat            Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lastReadMessage Message? @relation("ReadPointer", fields: [lastReadMessageId], references: [id], onDelete: SetNull)
+
+  @@id([chatId, userId])
+  @@map("chat_reads")
+}
+
+// ============================================================
+// MESSAGE  (was backend/model/messageModel.js)
+// ============================================================
+model Message {
+  id        String   @id @default(uuid()) @db.Uuid
+  content   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // sender -> User (nullable so deleting a user keeps history)
+  senderId String? @db.Uuid
+  sender   User?   @relation(fields: [senderId], references: [id], onDelete: SetNull)
+
+  // chat -> Chat
+  chatId String @db.Uuid
+  chat   Chat   @relation("ChatMessages", fields: [chatId], references: [id], onDelete: Cascade)
+
+  // back-relations
+  latestOfChat Chat?      @relation("LatestMessage")
+  readPointers ChatRead[] @relation("ReadPointer")
+
+  @@index([chatId, createdAt]) // message list + unread comparison
+  @@map("messages")
+}

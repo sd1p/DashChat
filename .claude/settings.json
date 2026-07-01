@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rm -f src/pages/Home/ProtectedRoute.jsx)",
+      "Bash(grep -rn \"ProtectedRoute\\\\|/api/user/login\\\\|/api/user/register\\\\|/api/user/logout\\\\|/api/auth/\\\\|api/user/logout\" src)",
+      "Bash(grep -rln \"state.user\" src)",
+      "Bash(clerk --help)",
+      "Bash(clerk config *)",
+      "Bash(clerk api *)",
+      "Bash(node -e ' *)"
+    ]
+  }
+}
