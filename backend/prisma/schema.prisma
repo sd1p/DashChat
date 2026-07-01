@@ -113,9 +113,32 @@ model Message {
   chat   Chat   @relation("ChatMessages", fields: [chatId], references: [id], onDelete: Cascade)
 
   // back-relations
-  latestOfChat Chat?      @relation("LatestMessage")
-  readPointers ChatRead[] @relation("ReadPointer")
+  latestOfChat Chat?        @relation("LatestMessage")
+  readPointers ChatRead[]   @relation("ReadPointer")
+  attachments  Attachment[]
 
   @@index([chatId, createdAt]) // message list + unread comparison
   @@map("messages")
+}
+
+// ============================================================
+// ATTACHMENT  (image attachments on a message; stored in S3)
+// ============================================================
+model Attachment {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now())
+
+  // message -> Message (attachments removed when their message is deleted)
+  messageId String  @db.Uuid
+  message   Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  key      String // S3 object key — source of truth; public URLs are derived/signed
+  mimeType String
+  fileName String
+  size     Int // bytes
+  width    Int? // pixels (images)
+  height   Int? // pixels (images)
+
+  @@index([messageId])
+  @@map("attachments")
 }

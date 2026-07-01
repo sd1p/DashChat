@@ -10,10 +10,18 @@ export { apiClient } from "./client";
 export { userApi } from "./userApi";
 export { chatApi } from "./chatApi";
 export { messageApi } from "./messageApi";
+export {
+  uploadApi,
+  validateImageFile,
+  ACCEPTED_IMAGE_TYPES,
+  MAX_UPLOAD_BYTES,
+} from "./uploadApi";
 
 export type {
   User,
   Message,
+  Attachment,
+  UploadedAttachment,
   Chat,
   CreateChatBody,
   CreateGroupChatBody,
@@ -23,4 +31,5 @@ export type {
   AuthResponse,
   MessagesResponse,
   SendMessageResponse,
+  UploadResponse,
 } from "./types";

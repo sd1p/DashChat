@@ -7,6 +7,7 @@ import { clerkMiddleware } from "@clerk/express";
 import userRoutes from "./routes/userRoutes";
 import chatRoutes from "./routes/chatRoutes";
 import messageRoutes from "./routes/messageRoutes";
+import uploadRoutes from "./routes/uploadRoutes";
 import prisma from "./config/prisma";
 import errorHandler from "./middleware/errorHandler";
 import type {
@@ -41,6 +42,7 @@ app.use(clerkMiddleware());
 app.use("/api/user", userRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/message", messageRoutes);
+app.use("/api/upload", uploadRoutes);
 
 app.use(errorHandler);
 

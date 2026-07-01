@@ -13,6 +13,23 @@ export interface User {
   updatedAt: string;
 }
 
+/**
+ * An image attachment on a message. `url` is a short-lived pre-signed S3 GET
+ * URL minted by the backend on each read — do not cache it long-term; if it
+ * 403s, refetch the messages to get a fresh one. The private S3 `key` is never
+ * exposed to the client.
+ */
+export interface Attachment {
+  id: string;
+  url: string;
+  mimeType: string;
+  fileName: string;
+  size: number;
+  width: number | null;
+  height: number | null;
+  createdAt: string;
+}
+
 export interface Message {
   id: string;
   content: string | null;
@@ -22,8 +39,23 @@ export interface Message {
   chatId: string;
   /** Hydrated on sendMessage so clients can route the socket event by chat. */
   chat?: Chat | null;
+  /** Image attachments; present (possibly empty) on sendMessage/getMessages. */
+  attachments?: Attachment[];
   createdAt: string;
   updatedAt: string;
+}
+
+/**
+ * Metadata returned by POST /api/upload after an image is stored in S3, sent
+ * back to the server as part of the next sendMessage call (upload-then-send).
+ */
+export interface UploadedAttachment {
+  key: string;
+  mimeType: string;
+  fileName: string;
+  size: number;
+  width: number | null;
+  height: number | null;
 }
 
 export interface Chat {
@@ -66,6 +98,12 @@ export interface GroupMemberBody {
 export interface SendMessageBody {
   content: string;
   chatId: string;
+  /** Images uploaded via /api/upload; at least one required if content empty. */
+  attachments?: UploadedAttachment[];
+}
+
+export interface UploadResponse {
+  attachment: UploadedAttachment;
 }
 
 // ---- Response envelopes (backend wraps some payloads) ----

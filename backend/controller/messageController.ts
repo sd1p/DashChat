@@ -1,6 +1,30 @@
 import asyncHandler from "express-async-handler";
 import prisma from "../config/prisma";
 import { assertChatMember } from "../lib/chatAccess";
+import { serializeMessageAttachments } from "../lib/attachments";
+
+// Columns selected for attachments on any message read. `key` is included so we
+// can sign it; serializeMessageAttachments strips it before responding.
+const attachmentSelect = {
+  id: true,
+  key: true,
+  mimeType: true,
+  fileName: true,
+  size: true,
+  width: true,
+  height: true,
+  createdAt: true,
+} as const;
+
+// Shape the client sends after uploading via /api/upload.
+type IncomingAttachment = {
+  key: string;
+  mimeType: string;
+  fileName: string;
+  size: number;
+  width?: number | null;
+  height?: number | null;
+};
 
 // Mark a chat read for a user by pointing their read receipt at the newest
 // message (replaces the old lastSeen timestamp map; id-based avoids boundary
@@ -20,19 +44,51 @@ async function markChatRead(chatId: string, userId: string) {
 }
 
 export const sendMessage = asyncHandler(async (req, res) => {
-  const { content, chatId } = req.body as { content?: string; chatId?: string };
-  if (!content || !chatId) {
-    res.status(400).json({ message: "Provide valid content and chatId" });
+  const { content, chatId, attachments } = req.body as {
+    content?: string;
+    chatId?: string;
+    attachments?: IncomingAttachment[];
+  };
+
+  const hasAttachments = Array.isArray(attachments) && attachments.length > 0;
+  const trimmed = content?.trim();
+
+  if (!chatId) {
+    res.status(400).json({ message: "chatId is required" });
+    return;
+  }
+  // A message must carry text or at least one attachment (or both).
+  if (!trimmed && !hasAttachments) {
+    res
+      .status(400)
+      .json({ message: "Provide message content or an attachment" });
     return;
   }
 
   if (!(await assertChatMember(chatId, req.user!.id, res))) return;
 
   const created = await prisma.message.create({
-    data: { content, chatId, senderId: req.user!.id },
+    data: {
+      content: trimmed || null,
+      chatId,
+      senderId: req.user!.id,
+      ...(hasAttachments && {
+        attachments: {
+          create: attachments!.map((a) => ({
+            key: a.key,
+            mimeType: a.mimeType,
+            fileName: a.fileName,
+            size: a.size,
+            width: a.width ?? null,
+            height: a.height ?? null,
+          })),
+        },
+      }),
+    },
     include: {
       sender: true,
       chat: { include: { users: { include: { user: true } } } },
+      attachments: { select: attachmentSelect },
     },
   });
 
@@ -43,13 +99,13 @@ export const sendMessage = asyncHandler(async (req, res) => {
   });
 
   // Flatten chat.users (join rows -> User[]) so the socket payload matches the
-  // shape the clients expect.
-  const message = {
+  // shape the clients expect, and swap attachment keys for signed URLs.
+  const message = await serializeMessageAttachments({
     ...created,
     chat: created.chat
       ? { ...created.chat, users: created.chat.users.map((cu) => cu.user) }
       : created.chat,
-  };
+  });
 
   res.status(201).json({ message });
 });
@@ -63,11 +119,20 @@ export const getMessages = asyncHandler(async (req, res) => {
 
   if (!(await assertChatMember(chatId, req.user!.id, res))) return;
 
-  const messages = await prisma.message.findMany({
+  const rows = await prisma.message.findMany({
     where: { chatId },
-    include: { sender: true, chat: true },
+    include: {
+      sender: true,
+      chat: true,
+      attachments: { select: attachmentSelect },
+    },
     orderBy: { createdAt: "asc" },
   });
+
+  // Mint signed URLs for every attachment across all messages.
+  const messages = await Promise.all(
+    rows.map((m) => serializeMessageAttachments(m))
+  );
 
   await markChatRead(chatId, req.user!.id);
 

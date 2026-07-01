@@ -4,6 +4,7 @@ import timeConversion from "@/utils/timeConversion";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/queries";
 import type { Message as MessageType } from "@/api";
+import MessageAttachments from "./MessageAttachments";
 
 interface MessageProps {
   message: MessageType;
@@ -39,6 +40,8 @@ const Message = ({ message, isGroupChat, startsRun }: MessageProps) => {
   const time = timeConversion(message.createdAt);
   const isOwner = message.sender?.id === user?.id;
   const showName = isGroupChat && !isOwner && startsRun;
+  const attachments = message.attachments ?? [];
+  const hasText = !!message.content;
 
   return (
     <div
@@ -78,11 +81,20 @@ const Message = ({ message, isGroupChat, startsRun }: MessageProps) => {
           </span>
         )}
 
+        {/* Image attachments render above the text (if any). */}
+        {attachments.length > 0 && (
+          <MessageAttachments attachments={attachments} isOwner={isOwner} />
+        )}
+
         {/* Text with the inline time floated to the end so it wraps naturally. */}
-        <span className="break-words leading-relaxed">{message.content}</span>
+        {hasText && (
+          <span className="break-words leading-relaxed">{message.content}</span>
+        )}
         <span
           className={cn(
             "float-right ml-2 mt-1 translate-y-0.5 text-[10px]",
+            // No text row to sit beside — nudge the timestamp under the image.
+            !hasText && "clear-both block text-right",
             isOwner ? "text-white/70" : "text-gray-400",
           )}
         >
