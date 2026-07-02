@@ -73,10 +73,34 @@
   --input: oklch(0.92 0.01 285);
   --ring: oklch(0.78 0.1 277);
 
-  /* Brand surfaces used directly by the chat shell. */
-  --brand-dark: #2f2d52;
-  --brand-sidebar: #3e3c61;
-  --brand-accent: #a7bcff;
+  /* ---------------------------------------------------------------- *
+   * Brand + chat palette. THIS is the one place to retheme the app.
+   * Every chat surface, bubble and text color derives from these.
+   * ---------------------------------------------------------------- */
+  --brand-dark: #2f2d52;      /* navbar / chat header background       */
+  --brand-sidebar: #3e3c61;   /* conversation-list rail background     */
+  --brand-accent: #a7bcff;    /* rings, subtle accents                 */
+
+  /* Chat surfaces */
+  --chat-surface: #ddddf7;    /* message-thread & welcome background   */
+  --chat-header-fg: #ddddf7;  /* text/icons on the dark header         */
+
+  /* Message bubbles */
+  --chat-bubble-own: #8da4f1; /* own-message bubble + send button      */
+  --chat-bubble-peer: #ffffff;/* peer-message bubble                   */
+  --chat-bubble-peer-fg: #2f2d52; /* text on a peer bubble             */
+  --chat-link-peer: #5d5b8d;  /* links / muted text on peer bubbles    */
+  --chat-composer: #ffffff;   /* message-input bar background          */
+  --chat-input-field: #f3f4f6;    /* the text-field pill (light: gray-100) */
+  --chat-input-field-focus: #f9fafb; /* text-field on focus (gray-50)     */
+
+  /* Stable per-sender name colors (group chats). */
+  --chat-name-1: #5d5b8d;
+  --chat-name-2: #8da4f1;
+  --chat-name-3: #7f66ff;
+  --chat-name-4: #c06fd6;
+  --chat-name-5: #5b8def;
+  --chat-name-6: #6f8fb3;
 }
 
 .dark {
@@ -98,6 +122,29 @@
   --border: oklch(1 0 0 / 12%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.78 0.1 277);
+
+  /* Dark-mode chat palette. Header/rail stay dark; surfaces & bubbles
+     shift to deep indigos so the chat reads in a dark theme too. */
+  --brand-dark: #1c1b30;
+  --brand-sidebar: #26243f;
+
+  --chat-surface: #17162a;
+  --chat-header-fg: #c9c8e8;
+
+  --chat-bubble-own: #5b6fce;
+  --chat-bubble-peer: #2b2942;
+  --chat-bubble-peer-fg: #e6e6fa;
+  --chat-link-peer: #b3b1e0;
+  --chat-composer: #211f36;
+  --chat-input-field: #2e2c47;
+  --chat-input-field-focus: #383552;
+
+  --chat-name-1: #9a97d6;
+  --chat-name-2: #8da4f1;
+  --chat-name-3: #a58cff;
+  --chat-name-4: #d68ce6;
+  --chat-name-5: #7ba3f2;
+  --chat-name-6: #93b0d0;
 }
 
 /* Map tokens into Tailwind's theme so utilities like bg-background,
@@ -125,6 +172,23 @@
   --color-brand-dark: var(--brand-dark);
   --color-brand-sidebar: var(--brand-sidebar);
   --color-brand-accent: var(--brand-accent);
+
+  --color-chat-surface: var(--chat-surface);
+  --color-chat-header-fg: var(--chat-header-fg);
+  --color-chat-bubble-own: var(--chat-bubble-own);
+  --color-chat-bubble-peer: var(--chat-bubble-peer);
+  --color-chat-bubble-peer-fg: var(--chat-bubble-peer-fg);
+  --color-chat-link-peer: var(--chat-link-peer);
+  --color-chat-composer: var(--chat-composer);
+  --color-chat-input-field: var(--chat-input-field);
+  --color-chat-input-field-focus: var(--chat-input-field-focus);
+
+  --color-chat-name-1: var(--chat-name-1);
+  --color-chat-name-2: var(--chat-name-2);
+  --color-chat-name-3: var(--chat-name-3);
+  --color-chat-name-4: var(--chat-name-4);
+  --color-chat-name-5: var(--chat-name-5);
+  --color-chat-name-6: var(--chat-name-6);
 
   --font-sans: SegoeUI, ui-sans-serif, system-ui, sans-serif;
 

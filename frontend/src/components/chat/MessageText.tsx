@@ -29,7 +29,7 @@ const MessageText = ({ text, isOwner }: MessageTextProps) => {
               rel="noopener noreferrer"
               className={cn(
                 "underline underline-offset-2",
-                isOwner ? "text-white" : "text-[#5d5b8d]",
+                isOwner ? "text-white" : "text-chat-link-peer",
               )}
             >
               {part}

@@ -25,6 +25,16 @@ export default function RootLayout({
           before React hydrates, which would otherwise trip a hydration
           mismatch. This suppresses the warning for these two elements only. */}
       <html lang="en" suppressHydrationWarning>
+        <head>
+          {/* Apply the persisted theme before first paint so there's no theme
+              flash. Defaults to dark when nothing is stored. Mirrors the logic
+              in src/lib/theme.tsx. */}
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `(function(){try{var t=localStorage.getItem('dashchat-theme')||'dark';if(t==='dark')document.documentElement.classList.add('dark');}catch(e){document.documentElement.classList.add('dark');}})();`,
+            }}
+          />
+        </head>
         <body className="antialiased" suppressHydrationWarning>
           <Providers>{children}</Providers>
         </body>

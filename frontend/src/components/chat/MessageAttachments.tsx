@@ -96,7 +96,7 @@ const MessageAttachments = ({
                 <span
                   className={cn(
                     "block truncate text-xs font-medium",
-                    isOwner ? "text-white" : "text-[#2f2d52]",
+                    isOwner ? "text-white" : "text-chat-bubble-peer-fg",
                   )}
                 >
                   {a.fileName}

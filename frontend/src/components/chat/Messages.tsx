@@ -24,7 +24,7 @@ const Messages = () => {
   const isGroupChat = chatDetails?.isGroupChat ?? false;
 
   return (
-    <div className="flex-1 overflow-y-auto bg-[#ddddf7] px-3 py-4 md:px-16">
+    <div className="flex-1 overflow-y-auto bg-chat-surface px-3 py-4 md:px-16">
       {messages.map((message, i) => {
         // First bubble of a run from the same sender gets the tail.
         const startsRun = messages[i - 1]?.senderId !== message.senderId;

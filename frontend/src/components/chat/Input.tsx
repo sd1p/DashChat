@@ -181,7 +181,7 @@ const Input = ({
   return (
     <form
       onSubmit={handleSend}
-      className="flex shrink-0 flex-col gap-2 border-t border-black/10 bg-white p-3"
+      className="flex shrink-0 flex-col gap-2 border-t border-black/10 bg-chat-composer p-3"
     >
       {/* Pending attachment strip (thumbnail for images / icon otherwise). */}
       {pending && (
@@ -217,7 +217,7 @@ const Input = ({
                 </p>
                 <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
                   <div
-                    className="h-full rounded-full bg-[#8da4f1] transition-all"
+                    className="h-full rounded-full bg-chat-bubble-own transition-all"
                     style={{ width: `${Math.round(pending.progress * 100)}%` }}
                   />
                 </div>
@@ -282,14 +282,14 @@ const Input = ({
           placeholder="Type a message…"
           value={message}
           onChange={handleTyping}
-          className="h-10 min-w-0 flex-1 rounded-full bg-gray-100 px-4 text-sm text-[#2f2d52] outline-none transition-colors placeholder:text-gray-400 focus:bg-gray-50 focus:ring-2 focus:ring-brand-accent/50"
+          className="h-10 min-w-0 flex-1 rounded-full bg-chat-input-field px-4 text-sm text-chat-bubble-peer-fg outline-none transition-colors placeholder:text-gray-400 focus:bg-chat-input-field-focus focus:ring-2 focus:ring-brand-accent/50"
         />
 
         <Button
           type="submit"
           size="icon"
           disabled={!canSend}
-          className="size-10 shrink-0 rounded-full bg-[#8da4f1] text-white hover:bg-[#8da4f1]/90"
+          className="size-10 shrink-0 rounded-full bg-chat-bubble-own text-white hover:bg-chat-bubble-own/90"
           aria-label="Send message"
         >
           <SendHorizontal className="size-[18px]" />

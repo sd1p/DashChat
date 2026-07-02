@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { UserButton } from "@clerk/nextjs";
 import { MessageSquare } from "lucide-react";
 import { useUser } from "@/queries";
+import ThemeToggle from "@/components/ThemeToggle";
 
 // Ported from _legacy/src/components/Sidebar/Navbar.tsx. The old SCSS: navbar
 // bg #2f2d52 (brand-dark), text #ddddf7.
@@ -22,7 +23,7 @@ const Navbar = () => {
   useEffect(() => setMounted(true), []);
 
   return (
-    <div className="flex h-14 shrink-0 items-center justify-between border-b border-white/10 bg-brand-dark px-4 text-[#ddddf7]">
+    <div className="flex h-14 shrink-0 items-center justify-between border-b border-white/10 bg-brand-dark px-4 text-chat-header-fg">
       <div className="flex items-center gap-2">
         <div className="flex size-7 items-center justify-center rounded-md bg-brand-accent/20 text-brand-accent">
           <MessageSquare className="size-4" />
@@ -30,7 +31,8 @@ const Navbar = () => {
         <span className="text-base font-semibold tracking-tight">DashChat</span>
       </div>
       <div className="flex items-center gap-2.5">
-        <span className="max-w-[8rem] truncate text-sm text-[#ddddf7]/80">
+        <ThemeToggle />
+        <span className="max-w-[8rem] truncate text-sm text-chat-header-fg/80">
           {user?.name}
         </span>
         {/* Clerk's UserButton: avatar + account menu + sign out. Post-sign-out

@@ -56,7 +56,7 @@ const LinkPreviewCard = ({ preview, isOwner }: LinkPreviewCardProps) => {
           <p
             className={cn(
               "line-clamp-2 text-xs font-semibold",
-              isOwner ? "text-white" : "text-[#2f2d52]",
+              isOwner ? "text-white" : "text-chat-bubble-peer-fg",
             )}
           >
             {preview.title}

@@ -6,17 +6,17 @@ import { MessageSquare } from "lucide-react";
 // and a pure-CSS typing line (no extra runtime dep).
 const Welcome = () => {
   return (
-    <div className="flex h-full flex-1 flex-col items-center justify-center gap-5 bg-[#ddddf7] px-6 text-center text-[#2f2d52]">
-      <div className="flex size-16 items-center justify-center rounded-2xl bg-[#8da4f1]/20 text-[#8da4f1] shadow-sm">
+    <div className="flex h-full flex-1 flex-col items-center justify-center gap-5 bg-chat-surface px-6 text-center text-chat-bubble-peer-fg">
+      <div className="flex size-16 items-center justify-center rounded-2xl bg-chat-bubble-own/20 text-chat-bubble-own shadow-sm">
         <MessageSquare className="size-8" />
       </div>
 
       <strong className="text-3xl font-semibold tracking-tight sm:text-4xl">
-        Welcome to <span className="text-[#8DA4F1]">DashChat</span>
+        Welcome to <span className="text-chat-bubble-own">DashChat</span>
       </strong>
 
       <span
-        className="overflow-hidden whitespace-nowrap border-r-2 border-[#8DA4F1] pr-1 text-base text-[#5d5b8d] sm:text-lg [animation:welcome-type_3s_steps(40,end)_infinite_alternate,welcome-caret_0.7s_step-end_infinite]"
+        className="overflow-hidden whitespace-nowrap border-r-2 border-chat-bubble-own pr-1 text-base text-chat-link-peer sm:text-lg [animation:welcome-type_3s_steps(40,end)_infinite_alternate,welcome-caret_0.7s_step-end_infinite]"
         style={{ width: "fit-content" }}
       >
         Select a chat to start a conversation.

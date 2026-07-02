@@ -62,15 +62,15 @@ const Chat = ({ socket, emitNewMessage, emitTyping, emitNotTyping }: ChatProps) 
   const isAdmin = isGroupChat && chatDetails?.groupAdminId === user?.id;
 
   return (
-    <div className="flex h-full min-w-0 flex-1 flex-col bg-[#ddddf7]">
+    <div className="flex h-full min-w-0 flex-1 flex-col bg-chat-surface">
       {/* Header */}
-      <div className="flex h-14 shrink-0 items-center gap-3 border-b border-black/10 bg-brand-dark px-3 text-[#ddddf7]">
+      <div className="flex h-14 shrink-0 items-center gap-3 border-b border-black/10 bg-brand-dark px-3 text-chat-header-fg">
         {/* Back to the conversation list — mobile only. */}
         <Button
           variant="ghost"
           size="icon"
           onClick={() => selectChat(null)}
-          className="size-9 shrink-0 text-[#ddddf7] hover:bg-white/10 hover:text-white md:hidden"
+          className="size-9 shrink-0 text-chat-header-fg hover:bg-white/10 hover:text-white md:hidden"
           aria-label="Back to chats"
         >
           <ArrowLeft className="size-5" />
@@ -107,7 +107,7 @@ const Chat = ({ socket, emitNewMessage, emitTyping, emitNotTyping }: ChatProps) 
             <Button
               variant="ghost"
               size="icon"
-              className="size-9 text-[#ddddf7] hover:bg-white/10 hover:text-white"
+              className="size-9 text-chat-header-fg hover:bg-white/10 hover:text-white"
               aria-label="Start video call"
             >
               <Video className="size-[18px]" />
@@ -117,7 +117,7 @@ const Chat = ({ socket, emitNewMessage, emitTyping, emitNotTyping }: ChatProps) 
                 variant="ghost"
                 size="icon"
                 onClick={() => setShowAddMember(true)}
-                className="size-9 text-[#ddddf7] hover:bg-white/10 hover:text-white"
+                className="size-9 text-chat-header-fg hover:bg-white/10 hover:text-white"
                 aria-label="Add people"
               >
                 <UserPlus className="size-[18px]" />
@@ -126,7 +126,7 @@ const Chat = ({ socket, emitNewMessage, emitTyping, emitNotTyping }: ChatProps) 
             <Button
               variant="ghost"
               size="icon"
-              className="size-9 text-[#ddddf7] hover:bg-white/10 hover:text-white"
+              className="size-9 text-chat-header-fg hover:bg-white/10 hover:text-white"
               aria-label="More options"
             >
               <MoreVertical className="size-[18px]" />
