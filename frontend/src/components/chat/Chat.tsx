@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowLeft, Video, UserPlus, MoreVertical } from "lucide-react";
+import { ArrowLeft, UserPlus, Phone, Video } from "lucide-react";
 import Messages from "./Messages";
 import Input from "./Input";
 import AddMemberDialog from "./AddMemberDialog";
@@ -16,6 +16,11 @@ interface ChatProps {
   emitNewMessage: (message: Message) => void;
   emitTyping: (chatId: string) => void;
   emitNotTyping: (chatId: string) => void;
+  onStartCall: (
+    peer: { id: string; name: string; photo: string },
+    chatId: string,
+    withVideo: boolean,
+  ) => void;
 }
 
 // Ported from _legacy/src/components/Chat/Chat.tsx. Chat details come from
@@ -25,7 +30,13 @@ interface ChatProps {
 // Redesigned as a shadcn-style conversation pane: a header with a mobile back
 // button (clears the selection to return to the sidebar list), the peer avatar,
 // title + presence line, and ghost icon actions.
-const Chat = ({ socket, emitNewMessage, emitTyping, emitNotTyping }: ChatProps) => {
+const Chat = ({
+  socket,
+  emitNewMessage,
+  emitTyping,
+  emitNotTyping,
+  onStartCall,
+}: ChatProps) => {
   const { selectedChatId, selectChat } = useSelectedChat();
   const { data: user } = useUser();
   const { data: chatDetails } = useChatDetails(selectedChatId);
@@ -101,35 +112,53 @@ const Chat = ({ socket, emitNewMessage, emitTyping, emitNotTyping }: ChatProps) 
           </>
         )}
 
-        {/* Group-only actions — a 1-on-1 chat has no call / add-people / menu. */}
-        {!isLoading && isGroupChat && (
+        {/* 1-on-1 call actions — voice + video. Group calling is out of scope. */}
+        {!isLoading && !isGroupChat && peer && (
           <div className="flex shrink-0 items-center gap-0.5">
             <Button
               variant="ghost"
               size="icon"
+              onClick={() =>
+                onStartCall(
+                  { id: peer.id, name: peer.name, photo: peer.photo },
+                  selectedChatId,
+                  false,
+                )
+              }
+              className="size-9 text-chat-header-fg hover:bg-white/10 hover:text-white"
+              aria-label="Start voice call"
+            >
+              <Phone className="size-[18px]" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() =>
+                onStartCall(
+                  { id: peer.id, name: peer.name, photo: peer.photo },
+                  selectedChatId,
+                  true,
+                )
+              }
               className="size-9 text-chat-header-fg hover:bg-white/10 hover:text-white"
               aria-label="Start video call"
             >
               <Video className="size-[18px]" />
             </Button>
-            {isAdmin && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowAddMember(true)}
-                className="size-9 text-chat-header-fg hover:bg-white/10 hover:text-white"
-                aria-label="Add people"
-              >
-                <UserPlus className="size-[18px]" />
-              </Button>
-            )}
+          </div>
+        )}
+
+        {/* Group-only action — only the admin can add people. */}
+        {!isLoading && isGroupChat && isAdmin && (
+          <div className="flex shrink-0 items-center gap-0.5">
             <Button
               variant="ghost"
               size="icon"
+              onClick={() => setShowAddMember(true)}
               className="size-9 text-chat-header-fg hover:bg-white/10 hover:text-white"
-              aria-label="More options"
+              aria-label="Add people"
             >
-              <MoreVertical className="size-[18px]" />
+              <UserPlus className="size-[18px]" />
             </Button>
           </div>
         )}

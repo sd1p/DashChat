@@ -99,4 +99,25 @@ io.on("connection", (socket) => {
   //chatroom events
   socket.on("typing", (room) => socket.in(room).emit("typing"));
   socket.on("notTyping", (room) => socket.in(room).emit("notTyping"));
+
+  // WebRTC call signaling — pure relay to the peer's user room (joined in
+  // "setup"). The server never inspects SDP/ICE payloads; media itself flows
+  // peer-to-peer and never touches this server.
+  socket.on("callUser", ({ toUserId, chatId, offer, from, withVideo }) => {
+    socket
+      .to(toUserId)
+      .emit("incomingCall", { fromUserId: from.id, chatId, offer, from, withVideo });
+  });
+  socket.on("answerCall", ({ toUserId, answer }) => {
+    socket.to(toUserId).emit("callAnswered", { answer });
+  });
+  socket.on("iceCandidate", ({ toUserId, candidate }) => {
+    socket.to(toUserId).emit("iceCandidate", { candidate });
+  });
+  socket.on("rejectCall", ({ toUserId }) => {
+    socket.to(toUserId).emit("callRejected");
+  });
+  socket.on("endCall", ({ toUserId }) => {
+    socket.to(toUserId).emit("callEnded");
+  });
 });

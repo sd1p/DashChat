@@ -3,7 +3,9 @@
 import Sidebar from "@/components/sidebar/Sidebar";
 import Chat from "./Chat";
 import Welcome from "./Welcome";
+import CallOverlay from "@/components/call/CallOverlay";
 import { useChatSocket } from "./useChatSocket";
+import { useWebRTCCall } from "./useWebRTCCall";
 import { useSelectedChat, useUser } from "@/queries";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +24,15 @@ const ChatHome = () => {
   const { socket, emitNewMessage, emitTyping, emitNotTyping } = useChatSocket({
     userId: user?.id,
     selectedChatId,
+  });
+
+  // 1-on-1 calling shares the same socket. Mounted here (not in Chat) so an
+  // incoming call rings regardless of which chat — if any — is open.
+  const call = useWebRTCCall({
+    socket,
+    selfUser: user
+      ? { id: user.id, name: user.name, photo: user.photo }
+      : null,
   });
 
   const hasChat = Boolean(selectedChatId);
@@ -53,11 +64,14 @@ const ChatHome = () => {
             emitNewMessage={emitNewMessage}
             emitTyping={emitTyping}
             emitNotTyping={emitNotTyping}
+            onStartCall={call.startCall}
           />
         ) : (
           <Welcome />
         )}
       </div>
+
+      <CallOverlay call={call} />
     </div>
   );
 };

@@ -10,6 +10,21 @@ export interface SocketMessage extends Message {
   chat?: (Chat & { users?: User[] }) | null;
 }
 
+// ---- WebRTC calling (1-on-1) -------------------------------------------------
+// The backend is a pure signaling relay: it forwards SDP offers/answers and ICE
+// candidates between the two peers' user rooms and never inspects the payloads.
+// SDP/ICE are DOM lib types on the client; on the server we treat them as opaque
+// blobs so we don't need to pull in lib.dom.
+type SdpDescription = { type: string; sdp?: string };
+type IceCandidate = Record<string, unknown>;
+
+// The minimal caller identity shown in the callee's incoming-call UI.
+export interface CallUser {
+  id: string;
+  name: string;
+  photo: string;
+}
+
 // Events the client emits to the server.
 export interface ClientToServerEvents {
   setup: (userId: string) => void;
@@ -17,6 +32,19 @@ export interface ClientToServerEvents {
   newMessage: (message: SocketMessage) => void;
   typing: (room: string) => void;
   notTyping: (room: string) => void;
+
+  // calling
+  callUser: (payload: {
+    toUserId: string;
+    chatId: string;
+    offer: SdpDescription;
+    from: CallUser;
+    withVideo: boolean;
+  }) => void;
+  answerCall: (payload: { toUserId: string; answer: SdpDescription }) => void;
+  iceCandidate: (payload: { toUserId: string; candidate: IceCandidate }) => void;
+  rejectCall: (payload: { toUserId: string }) => void;
+  endCall: (payload: { toUserId: string }) => void;
 }
 
 // Events the server emits to clients.
@@ -25,4 +53,17 @@ export interface ServerToClientEvents {
   notify: (message: SocketMessage) => void;
   typing: () => void;
   notTyping: () => void;
+
+  // calling
+  incomingCall: (payload: {
+    fromUserId: string;
+    chatId: string;
+    offer: SdpDescription;
+    from: CallUser;
+    withVideo: boolean;
+  }) => void;
+  callAnswered: (payload: { answer: SdpDescription }) => void;
+  iceCandidate: (payload: { candidate: IceCandidate }) => void;
+  callRejected: () => void;
+  callEnded: () => void;
 }
