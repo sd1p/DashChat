@@ -1,19 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { X } from "lucide-react";
+import { Download, FileText, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Attachment } from "@/api";
 
 interface MessageAttachmentsProps {
   attachments: Attachment[];
-  /** Own vs. peer bubble — only used to tune the placeholder background. */
+  /** Own vs. peer bubble — tunes the card colors to sit on the bubble. */
   isOwner?: boolean;
 }
 
-// Renders image attachments inline in a message bubble. Clicking one opens a
-// full-size lightbox. Width/height (when known) set an aspect-ratio box so the
-// bubble doesn't reflow when the signed-URL image finishes loading.
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+// Images and GIFs render as an inline preview (click → full-size lightbox);
+// every other type (PDF, Excel) renders as a compact download card. Both use
+// the attachment's signed S3 URL. `image/*` covers GIFs — animated GIFs play
+// inline as-is.
 const MessageAttachments = ({
   attachments,
   isOwner,
@@ -26,39 +33,91 @@ const MessageAttachments = ({
 
   return (
     <>
-      <div
-        className={cn(
-          "mb-1 grid gap-1",
-          renderable.length > 1 ? "grid-cols-2" : "grid-cols-1",
-        )}
-      >
+      <div className="mb-1 flex flex-col gap-1">
         {renderable.map((a) => {
-          const ratio =
-            a.width && a.height ? a.width / a.height : undefined;
+          const isImage = a.mimeType.startsWith("image/");
+
+          if (isImage) {
+            const ratio =
+              a.width && a.height ? a.width / a.height : undefined;
+            return (
+              <button
+                key={a.id}
+                type="button"
+                onClick={() => setLightbox(a)}
+                className={cn(
+                  "w-72 max-w-full overflow-hidden rounded-md",
+                  isOwner ? "bg-white/20" : "bg-gray-100",
+                )}
+                style={ratio ? { aspectRatio: String(ratio) } : undefined}
+                aria-label={`Open image ${a.fileName}`}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={a.url}
+                  alt={a.fileName}
+                  loading="lazy"
+                  className="size-full cursor-zoom-in object-cover"
+                />
+              </button>
+            );
+          }
+
+          // Non-image → download card.
           return (
-            <button
+            <a
               key={a.id}
-              type="button"
-              onClick={() => setLightbox(a)}
+              href={a.url}
+              download={a.fileName}
+              target="_blank"
+              rel="noopener noreferrer"
               className={cn(
-                "overflow-hidden rounded-md",
-                isOwner ? "bg-white/20" : "bg-gray-100",
+                "group flex items-center gap-2 rounded-md p-2 transition-colors",
+                isOwner
+                  ? "bg-white/15 hover:bg-white/25"
+                  : "bg-gray-100 hover:bg-gray-200",
               )}
-              style={
-                ratio
-                  ? { aspectRatio: String(ratio), maxWidth: "min(20rem, 100%)" }
-                  : { maxWidth: "min(20rem, 100%)" }
-              }
-              aria-label={`Open image ${a.fileName}`}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={a.url}
-                alt={a.fileName}
-                loading="lazy"
-                className="size-full cursor-zoom-in object-cover"
+              <span
+                className={cn(
+                  "flex size-9 shrink-0 items-center justify-center rounded-md",
+                  isOwner ? "bg-white/20" : "bg-white",
+                )}
+              >
+                <FileText
+                  className={cn(
+                    "size-5",
+                    isOwner ? "text-white" : "text-gray-500",
+                  )}
+                />
+              </span>
+
+              <span className="min-w-0 flex-1">
+                <span
+                  className={cn(
+                    "block truncate text-xs font-medium",
+                    isOwner ? "text-white" : "text-[#2f2d52]",
+                  )}
+                >
+                  {a.fileName}
+                </span>
+                <span
+                  className={cn(
+                    "block text-[10px]",
+                    isOwner ? "text-white/70" : "text-gray-400",
+                  )}
+                >
+                  {formatBytes(a.size)}
+                </span>
+              </span>
+
+              <Download
+                className={cn(
+                  "size-4 shrink-0 opacity-70 transition-opacity group-hover:opacity-100",
+                  isOwner ? "text-white" : "text-gray-500",
+                )}
               />
-            </button>
+            </a>
           );
         })}
       </div>

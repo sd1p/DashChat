@@ -116,6 +116,7 @@ model Message {
   latestOfChat Chat?        @relation("LatestMessage")
   readPointers ChatRead[]   @relation("ReadPointer")
   attachments  Attachment[]
+  linkPreview  LinkPreview?
 
   @@index([chatId, createdAt]) // message list + unread comparison
   @@map("messages")
@@ -141,4 +142,24 @@ model Attachment {
 
   @@index([messageId])
   @@map("attachments")
+}
+
+// ============================================================
+// LINK PREVIEW  (Open Graph unfurl for the first URL in a message)
+// ============================================================
+model LinkPreview {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now())
+
+  // One preview per message; removed when the message is deleted.
+  messageId String  @unique @db.Uuid
+  message   Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  url         String // the resolved/canonical URL that was unfurled
+  title       String?
+  description String?
+  imageUrl    String? // og:image — hotlinked directly by the client
+  siteName    String?
+
+  @@map("link_previews")
 }

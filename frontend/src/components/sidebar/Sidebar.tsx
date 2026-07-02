@@ -1,6 +1,7 @@
 import Navbar from "./Navbar";
 import Search from "./Search";
 import Chats from "./Chats";
+import NewGroupButton from "./NewGroupButton";
 
 // Ported from _legacy/src/components/Sidebar/Sidebar.tsx. Old SCSS: flex:1,
 // background #3e3c61 (brand-sidebar). Navbar / Search / Chats stacked; the chat
@@ -8,10 +9,11 @@ import Chats from "./Chats";
 // rail from the conversation pane on desktop, shadcn-style.
 const Sidebar = () => {
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden border-r border-white/10 bg-brand-sidebar">
+    <div className="relative flex h-full w-full flex-col overflow-hidden border-r border-white/10 bg-brand-sidebar">
       <Navbar />
       <Search />
       <Chats />
+      <NewGroupButton />
     </div>
   );
 };

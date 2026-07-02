@@ -5,6 +5,8 @@ import { cn } from "@/lib/utils";
 import { useUser } from "@/queries";
 import type { Message as MessageType } from "@/api";
 import MessageAttachments from "./MessageAttachments";
+import LinkPreviewCard from "./LinkPreviewCard";
+import MessageText from "./MessageText";
 
 interface MessageProps {
   message: MessageType;
@@ -41,7 +43,11 @@ const Message = ({ message, isGroupChat, startsRun }: MessageProps) => {
   const isOwner = message.sender?.id === user?.id;
   const showName = isGroupChat && !isOwner && startsRun;
   const attachments = message.attachments ?? [];
+  const hasAttachments = attachments.length > 0;
+  const preview = message.linkPreview ?? null;
   const hasText = !!message.content;
+  // Anything that gives the bubble a fixed-width child uses the column layout.
+  const isRich = hasAttachments || !!preview;
 
   return (
     <div
@@ -54,6 +60,9 @@ const Message = ({ message, isGroupChat, startsRun }: MessageProps) => {
       <div
         className={cn(
           "relative max-w-[85%] rounded-lg px-2.5 py-1.5 text-sm shadow-sm sm:max-w-[65%]",
+          // With a fixed-width child (image or preview card), hug the content
+          // (w-fit) so the bubble wraps it instead of stretching to max width.
+          isRich && "flex w-fit flex-col",
           isOwner ? "bg-[#8da4f1] text-white" : "bg-white text-[#2f2d52]",
           // Square off the top corner on the tail side for the first of a run.
           startsRun && (isOwner ? "rounded-tr-none" : "rounded-tl-none"),
@@ -81,25 +90,42 @@ const Message = ({ message, isGroupChat, startsRun }: MessageProps) => {
           </span>
         )}
 
-        {/* Image attachments render above the text (if any). */}
-        {attachments.length > 0 && (
-          <MessageAttachments attachments={attachments} isOwner={isOwner} />
+        {isRich ? (
+          // Rich layout: fixed-width media/preview sets the bubble width; text +
+          // time sit beneath it in a row (no floats — those break w-fit).
+          <>
+            {hasAttachments && (
+              <MessageAttachments attachments={attachments} isOwner={isOwner} />
+            )}
+            {preview && <LinkPreviewCard preview={preview} isOwner={isOwner} />}
+            <div className="mt-1 flex items-end justify-between gap-2">
+              {hasText && (
+                <MessageText text={message.content!} isOwner={isOwner} />
+              )}
+              <span
+                className={cn(
+                  "ml-auto shrink-0 translate-y-0.5 text-[10px]",
+                  isOwner ? "text-white/70" : "text-gray-400",
+                )}
+              >
+                {time}
+              </span>
+            </div>
+          </>
+        ) : (
+          // Text-only layout: time floated to the end so it wraps naturally.
+          <>
+            <MessageText text={message.content ?? ""} isOwner={isOwner} />
+            <span
+              className={cn(
+                "float-right ml-2 mt-1 translate-y-0.5 text-[10px]",
+                isOwner ? "text-white/70" : "text-gray-400",
+              )}
+            >
+              {time}
+            </span>
+          </>
         )}
-
-        {/* Text with the inline time floated to the end so it wraps naturally. */}
-        {hasText && (
-          <span className="break-words leading-relaxed">{message.content}</span>
-        )}
-        <span
-          className={cn(
-            "float-right ml-2 mt-1 translate-y-0.5 text-[10px]",
-            // No text row to sit beside — nudge the timestamp under the image.
-            !hasText && "clear-both block text-right",
-            isOwner ? "text-white/70" : "text-gray-400",
-          )}
-        >
-          {time}
-        </span>
       </div>
     </div>
   );

@@ -64,13 +64,17 @@ const ChatInfo = ({ chat, onSelect }: ChatInfoProps) => {
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-2">
-          <span className="truncate text-sm font-semibold">{title}</span>
+          <span className="min-w-0 flex-1 truncate text-sm font-semibold">
+            {title}
+          </span>
           <span className="shrink-0 whitespace-nowrap text-[11px] text-white/50">
             {time}
           </span>
         </div>
         <div className="flex items-center justify-between gap-2">
-          <p className="truncate text-xs text-white/60">{preview}</p>
+          <p className="min-w-0 flex-1 truncate text-xs text-white/60">
+            {preview}
+          </p>
           {showBadge && (
             <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-brand-accent px-1.5 text-[11px] font-semibold text-brand-dark">
               {unread}

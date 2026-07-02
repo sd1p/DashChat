@@ -12,15 +12,16 @@ export { chatApi } from "./chatApi";
 export { messageApi } from "./messageApi";
 export {
   uploadApi,
-  validateImageFile,
-  ACCEPTED_IMAGE_TYPES,
+  validateFile,
   MAX_UPLOAD_BYTES,
+  ACCEPTED_UPLOAD_ACCEPT,
 } from "./uploadApi";
 
 export type {
   User,
   Message,
   Attachment,
+  LinkPreview,
   UploadedAttachment,
   Chat,
   CreateChatBody,

@@ -26,20 +26,35 @@ export const uploadApi = {
 };
 
 // Client-side guardrails mirroring the server (fast feedback before the POST).
+// Allowed: images, PDF, Excel (.xls/.xlsx/.csv). 10 MB cap.
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10 MB
-export const ACCEPTED_IMAGE_TYPES = [
+
+const ALLOWED_MIME = new Set([
   "image/jpeg",
   "image/png",
   "image/gif",
   "image/webp",
-];
+  "application/pdf",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "text/csv",
+]);
 
-export function validateImageFile(file: File): string | null {
-  if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-    return "Only JPEG, PNG, GIF, or WebP images are allowed";
+// Extension fallback for when the browser reports a blank/generic MIME.
+const ALLOWED_EXT = [".csv", ".xls", ".xlsx", ".pdf"];
+
+// The `accept` attribute for the file input.
+export const ACCEPTED_UPLOAD_ACCEPT =
+  "image/*,application/pdf,.xls,.xlsx,.csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+export function validateFile(file: File): string | null {
+  const name = file.name.toLowerCase();
+  const okByExt = ALLOWED_EXT.some((e) => name.endsWith(e));
+  if (!ALLOWED_MIME.has(file.type) && !okByExt) {
+    return "Unsupported file type. Allowed: images, PDF, Excel";
   }
   if (file.size > MAX_UPLOAD_BYTES) {
-    return "Image is too large (max 10 MB)";
+    return "File is too large (max 10 MB)";
   }
   return null;
 }

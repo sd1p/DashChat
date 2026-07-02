@@ -2,6 +2,7 @@ import asyncHandler from "express-async-handler";
 import prisma from "../config/prisma";
 import { assertChatMember } from "../lib/chatAccess";
 import { serializeMessageAttachments } from "../lib/attachments";
+import { fetchLinkPreview } from "../lib/linkPreview";
 
 // Columns selected for attachments on any message read. `key` is included so we
 // can sign it; serializeMessageAttachments strips it before responding.
@@ -67,6 +68,11 @@ export const sendMessage = asyncHandler(async (req, res) => {
 
   if (!(await assertChatMember(chatId, req.user!.id, res))) return;
 
+  // Unfurl the first URL in the text (if any) before creating the message so the
+  // preview rides along in the response + socket payload. Never throws — a
+  // failed fetch just yields null (no preview). Skipped when there's no text.
+  const preview = trimmed ? await fetchLinkPreview(trimmed) : null;
+
   const created = await prisma.message.create({
     data: {
       content: trimmed || null,
@@ -84,11 +90,23 @@ export const sendMessage = asyncHandler(async (req, res) => {
           })),
         },
       }),
+      ...(preview && {
+        linkPreview: {
+          create: {
+            url: preview.url,
+            title: preview.title,
+            description: preview.description,
+            imageUrl: preview.imageUrl,
+            siteName: preview.siteName,
+          },
+        },
+      }),
     },
     include: {
       sender: true,
       chat: { include: { users: { include: { user: true } } } },
       attachments: { select: attachmentSelect },
+      linkPreview: true,
     },
   });
 
@@ -125,6 +143,7 @@ export const getMessages = asyncHandler(async (req, res) => {
       sender: true,
       chat: true,
       attachments: { select: attachmentSelect },
+      linkPreview: true,
     },
     orderBy: { createdAt: "asc" },
   });

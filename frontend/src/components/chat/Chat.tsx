@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, Video, UserPlus, MoreVertical } from "lucide-react";
 import Messages from "./Messages";
 import Input from "./Input";
+import AddMemberDialog from "./AddMemberDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useChatDetails, useSelectedChat, useUser } from "@/queries";
@@ -29,6 +30,7 @@ const Chat = ({ socket, emitNewMessage, emitTyping, emitNotTyping }: ChatProps) 
   const { data: user } = useUser();
   const { data: chatDetails } = useChatDetails(selectedChatId);
   const [isTyping, setIsTyping] = useState(false);
+  const [showAddMember, setShowAddMember] = useState(false);
 
   // Peer's typing indicator (the server broadcasts typing/notTyping to the room).
   useEffect(() => {
@@ -56,6 +58,8 @@ const Chat = ({ socket, emitNewMessage, emitTyping, emitNotTyping }: ChatProps) 
   const title = !chatName ? peer?.name ?? "" : !isGroupChat ? peer?.name ?? "" : chatName;
   const avatar = isGroupChat ? users[0]?.photo : peer?.photo;
   const isLoading = !chatDetails;
+  // Only the group admin (the creator) can add participants.
+  const isAdmin = isGroupChat && chatDetails?.groupAdminId === user?.id;
 
   return (
     <div className="flex h-full min-w-0 flex-1 flex-col bg-[#ddddf7]">
@@ -108,14 +112,17 @@ const Chat = ({ socket, emitNewMessage, emitTyping, emitNotTyping }: ChatProps) 
             >
               <Video className="size-[18px]" />
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-9 text-[#ddddf7] hover:bg-white/10 hover:text-white"
-              aria-label="Add people"
-            >
-              <UserPlus className="size-[18px]" />
-            </Button>
+            {isAdmin && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowAddMember(true)}
+                className="size-9 text-[#ddddf7] hover:bg-white/10 hover:text-white"
+                aria-label="Add people"
+              >
+                <UserPlus className="size-[18px]" />
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="icon"
@@ -138,6 +145,13 @@ const Chat = ({ socket, emitNewMessage, emitTyping, emitNotTyping }: ChatProps) 
         emitTyping={emitTyping}
         emitNotTyping={emitNotTyping}
       />
+
+      {showAddMember && chatDetails && (
+        <AddMemberDialog
+          chat={chatDetails}
+          onClose={() => setShowAddMember(false)}
+        />
+      )}
     </div>
   );
 };

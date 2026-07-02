@@ -18,7 +18,11 @@ function ScrollArea({
     >
       <ScrollAreaPrimitive.Viewport
         data-slot="scroll-area-viewport"
-        className="size-full rounded-[inherit] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+        // Radix wraps children in an inner div with `display: table`, which
+        // sizes to content width — that lets long unbreakable strings (URLs)
+        // blow past the container and defeat `truncate`. Force that wrapper to
+        // block + full width so children are bounded by the viewport.
+        className="size-full rounded-[inherit] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 [&>div]:!block [&>div]:!w-full"
       >
         {children}
       </ScrollAreaPrimitive.Viewport>

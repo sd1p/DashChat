@@ -30,6 +30,20 @@ export interface Attachment {
   createdAt: string;
 }
 
+/**
+ * Open Graph unfurl of the first URL in a message's text, generated on send.
+ * `imageUrl` is the remote og:image, hotlinked directly by the client.
+ */
+export interface LinkPreview {
+  id: string;
+  url: string;
+  title: string | null;
+  description: string | null;
+  imageUrl: string | null;
+  siteName: string | null;
+  createdAt: string;
+}
+
 export interface Message {
   id: string;
   content: string | null;
@@ -41,6 +55,8 @@ export interface Message {
   chat?: Chat | null;
   /** Image attachments; present (possibly empty) on sendMessage/getMessages. */
   attachments?: Attachment[];
+  /** Link preview for the first URL in the text, when one was unfurled. */
+  linkPreview?: LinkPreview | null;
   createdAt: string;
   updatedAt: string;
 }

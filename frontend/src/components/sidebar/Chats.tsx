@@ -31,11 +31,6 @@ const Chats = () => {
 
   return (
     <ScrollArea className="flex-1">
-      <div className="px-3 pb-1 pt-3">
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-white/40">
-          Messages
-        </span>
-      </div>
       {chats.length === 0 ? (
         <p className="px-3 py-6 text-center text-xs text-white/40">
           No conversations yet. Search for a user to start chatting.
