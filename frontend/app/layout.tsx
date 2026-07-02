@@ -3,6 +3,15 @@ import { ClerkProvider } from "@clerk/nextjs";
 import Providers from "./providers";
 import "./globals.css";
 
+// Render every route dynamically instead of statically prerendering at build
+// time. The whole app is wrapped in <ClerkProvider> and is auth-gated (chat) or
+// renders Clerk's <SignIn>/<SignUp> (login/register), all of which validate the
+// publishable key when rendered. Static prerender during `next build` would
+// therefore require a valid NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY baked in at build
+// time — brittle for Docker/CI builds. Forcing dynamic rendering defers Clerk to
+// request time. Applies to all nested routes via the root layout.
+export const dynamic = "force-dynamic";
+
 // Replaces the old react-helmet <Helmet> usage. Per-page titles override this
 // via each route's own `metadata` export.
 export const metadata: Metadata = {

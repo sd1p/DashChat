@@ -1,0 +1,99 @@
+# Render Blueprint for DashChat — deploys the two services from this monorepo.
+#
+#   1. dashchat-backend   Express + Socket.IO + Prisma (long-lived web service).
+#                         Socket.IO rooms + WebRTC signaling are in-memory, so
+#                         this MUST be a single-instance long-lived process
+#                         (Render web service), NOT serverless. Keep numInstances
+#                         at 1 unless you add a Socket.IO Redis adapter.
+#   2. dashchat-frontend  Next.js (standalone) web service. NEXT_PUBLIC_* vars
+#                         are baked into the client bundle at BUILD time, so they
+#                         are passed as Docker build args, not runtime env.
+#
+# Database is external (Supabase Postgres) — not managed here. Set DATABASE_URL
+# (transaction pooler, :6543, pgbouncer=true) and DIRECT_URL (session pooler,
+# :5432) in the backend service env (marked sync:false below → set in dashboard).
+#
+# Deploy: push this repo to GitHub, then in Render → New → Blueprint, point at
+# the repo. Fill in every `sync: false` var in the dashboard. See RENDER.md.
+
+services:
+  # ----------------------------------------------------------------
+  # Backend — API + Socket.IO
+  # ----------------------------------------------------------------
+  - type: web
+    name: dashchat-backend
+    runtime: docker
+    dockerfilePath: ./dockerfile
+    dockerContext: .
+    # Free plan: $0, but the service spins down after ~15 min idle and cold-
+    # starts on the next request. On wake, in-memory Socket.IO rooms/WebRTC
+    # state is lost and live connections drop — acceptable for demo/testing.
+    # Upgrade to `starter` for an always-warm real-time backend.
+    plan: free
+    healthCheckPath: /
+    # NOTE: `numInstances` and `preDeployCommand` are not available on the free
+    # plan. Pending Prisma migrations are applied on container start instead
+    # (see the CMD in ./dockerfile), using DIRECT_URL via prisma.config.ts.
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Render injects PORT automatically (10000). server.ts reads process.env.PORT.
+      - key: PORT
+        value: 10000
+      # --- Database (Supabase) — set in dashboard ---
+      - key: DATABASE_URL
+        sync: false # transaction pooler: ...pooler.supabase.com:6543/postgres?pgbouncer=true
+      - key: DIRECT_URL
+        sync: false # session pooler:     ...pooler.supabase.com:5432/postgres
+      # --- Clerk ---
+      - key: CLERK_PUBLISHABLE_KEY
+        sync: false
+      - key: CLERK_SECRET_KEY
+        sync: false
+      - key: CLERK_FRONTEND_URL
+        sync: false
+      # --- AWS S3 (uploads) ---
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_REGION
+        sync: false
+      - key: AWS_BUCKET_NAME
+        sync: false
+
+  # ----------------------------------------------------------------
+  # Frontend — Next.js
+  # ----------------------------------------------------------------
+  - type: web
+    name: dashchat-frontend
+    runtime: docker
+    dockerfilePath: ./frontend/Dockerfile
+    dockerContext: ./frontend
+    # Free plan: a slow first load after idle is harmless for the frontend.
+    plan: free
+    healthCheckPath: /
+    # NEXT_PUBLIC_* are inlined into the client bundle at build time. Render
+    # passes these as --build-arg to `docker build` when marked as build args.
+    # They must point at the deployed backend URL.
+    envVars:
+      # Server-side, read at runtime (NOT baked into the bundle).
+      - key: CLERK_SECRET_KEY
+        sync: false
+      # --- Build-time public config (set in dashboard) ---
+      # Point both at the backend's Render URL, e.g.
+      #   https://dashchat-backend.onrender.com
+      - key: NEXT_PUBLIC_API_ORIGIN
+        sync: false
+      - key: NEXT_PUBLIC_SOCKET_URL
+        sync: false
+      - key: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+        sync: false
+      - key: NEXT_PUBLIC_CLERK_SIGN_IN_URL
+        value: /login
+      - key: NEXT_PUBLIC_CLERK_SIGN_UP_URL
+        value: /register
+      - key: NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL
+        value: /
+      - key: NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL
+        value: /

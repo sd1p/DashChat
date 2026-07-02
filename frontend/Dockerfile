@@ -1,9 +1,12 @@
 # Standalone Next.js (App Router) image for the DashChat frontend. Deployed as
 # its own service; talks to the API-only backend over the network.
 #
-# NEXT_PUBLIC_* vars are inlined into the client bundle at BUILD time, so they
-# must be provided as build args (not just runtime env). CLERK_SECRET_KEY is
-# server-side and read at runtime.
+# NEXT_PUBLIC_* vars are inlined into the client bundle at BUILD time and are
+# supplied as Docker build args. Render automatically translates a service's
+# env vars into `--build-arg`s of the same name, so setting them in the Render
+# dashboard is enough; for local/CI builds pass them explicitly with
+# `docker build --build-arg NEXT_PUBLIC_...=...`. CLERK_SECRET_KEY is
+# server-side and read at runtime (never a build arg — it must not be baked in).
 
 # ---- deps ----
 FROM oven/bun:1-alpine AS deps
@@ -17,8 +20,10 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Public config baked into the client bundle. Point these at the backend
-# service's reachable URL in your deploy.
+# Public config baked into the client bundle. Render supplies these as build
+# args of the same name (from the service's env vars); locally, pass them via
+# --build-arg. The static defaults cover the Clerk routing paths so only the
+# publishable key + backend URLs must be provided.
 ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 ARG NEXT_PUBLIC_API_ORIGIN
 ARG NEXT_PUBLIC_SOCKET_URL
