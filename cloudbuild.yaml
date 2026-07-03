@@ -1,0 +1,17 @@
+# Cloud Build config for the DashChat backend image.
+# Used instead of `gcloud builds submit --tag` because our Dockerfile is named
+# `dockerfile` (lowercase) — the --tag shortcut only accepts `Dockerfile`.
+# `docker build -f dockerfile` names it explicitly.
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -f
+      - dockerfile
+      - -t
+      - $_IMAGE
+      - .
+images:
+  - $_IMAGE
+options:
+  logging: CLOUD_LOGGING_ONLY

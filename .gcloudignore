@@ -1,0 +1,27 @@
+# Files not uploaded to Cloud Build when deploying the backend to Cloud Run.
+# The Docker build only needs package.json, bun.lock, backend/, prisma.config.ts,
+# and tsconfig.json — everything the root `dockerfile` COPYs. Keep this tight so
+# uploads stay small and fast.
+
+# Dependencies / build output (reinstalled/regenerated inside the image)
+node_modules/
+dist/
+**/node_modules/
+
+# The entire frontend — deployed separately on Render, not part of this image
+frontend/
+
+# VCS / tooling
+.git/
+.gitignore
+.vscode/
+.claude/
+
+# Secrets — provided as Cloud Run env vars, never baked into the image
+**/.env
+backend/config/.env
+
+# Docs / misc
+*.md
+ReadMe.md
+RENDER.md
