@@ -5,8 +5,16 @@
 # supplied as Docker build args. Render automatically translates a service's
 # env vars into `--build-arg`s of the same name, so setting them in the Render
 # dashboard is enough; for local/CI builds pass them explicitly with
-# `docker build --build-arg NEXT_PUBLIC_...=...`. CLERK_SECRET_KEY is
-# server-side and read at runtime (never a build arg — it must not be baked in).
+# `docker build --build-arg NEXT_PUBLIC_...=...`.
+#
+# Auth is Argus (OIDC) via Auth.js. `src/auth.ts` reads ARGUS_ISSUER /
+# DASHCHAT_CLIENT_ID / DASHCHAT_CLIENT_SECRET at MODULE LOAD and throws if
+# ARGUS_ISSUER is missing. `next build` evaluates the /api/auth/[...nextauth]
+# route module during page-data collection, so ARGUS_ISSUER must be present at
+# BUILD time too — not only at runtime — or the build fails with
+# "ARGUS_ISSUER is required". They're passed as build args below AND set again
+# at runtime in the runner stage (the client secret must be live for the OAuth
+# code exchange). AUTH_SECRET/AUTH_URL are runtime-only (set on the service).
 
 # ---- deps ----
 FROM oven/bun:1-alpine AS deps
@@ -20,24 +28,22 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Public config baked into the client bundle. Render supplies these as build
-# args of the same name (from the service's env vars); locally, pass them via
-# --build-arg. The static defaults cover the Clerk routing paths so only the
-# publishable key + backend URLs must be provided.
-ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+# Build-time config. Render supplies these as build args of the same name (from
+# the service's env vars); locally, pass them via --build-arg.
+#   NEXT_PUBLIC_*  → inlined into the client bundle.
+#   ARGUS_ISSUER / DASHCHAT_CLIENT_* → NOT inlined, but required at build time
+#   because src/auth.ts throws at module load and the auth route is evaluated
+#   during `next build`. See the header comment.
 ARG NEXT_PUBLIC_API_ORIGIN
 ARG NEXT_PUBLIC_SOCKET_URL
-ARG NEXT_PUBLIC_CLERK_SIGN_IN_URL=/login
-ARG NEXT_PUBLIC_CLERK_SIGN_UP_URL=/register
-ARG NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/
-ARG NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/
-ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY \
-    NEXT_PUBLIC_API_ORIGIN=$NEXT_PUBLIC_API_ORIGIN \
+ARG ARGUS_ISSUER
+ARG DASHCHAT_CLIENT_ID
+ARG DASHCHAT_CLIENT_SECRET
+ENV NEXT_PUBLIC_API_ORIGIN=$NEXT_PUBLIC_API_ORIGIN \
     NEXT_PUBLIC_SOCKET_URL=$NEXT_PUBLIC_SOCKET_URL \
-    NEXT_PUBLIC_CLERK_SIGN_IN_URL=$NEXT_PUBLIC_CLERK_SIGN_IN_URL \
-    NEXT_PUBLIC_CLERK_SIGN_UP_URL=$NEXT_PUBLIC_CLERK_SIGN_UP_URL \
-    NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=$NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL \
-    NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=$NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL
+    ARGUS_ISSUER=$ARGUS_ISSUER \
+    DASHCHAT_CLIENT_ID=$DASHCHAT_CLIENT_ID \
+    DASHCHAT_CLIENT_SECRET=$DASHCHAT_CLIENT_SECRET
 
 RUN bun run build
 
@@ -55,5 +61,8 @@ COPY --from=build /app/public ./public
 
 EXPOSE 3000
 
-# CLERK_SECRET_KEY must be supplied at runtime (-e CLERK_SECRET_KEY=...).
+# Runtime auth env (supplied by the Render service, not baked here):
+#   ARGUS_ISSUER, DASHCHAT_CLIENT_ID, DASHCHAT_CLIENT_SECRET — the OAuth code
+#   exchange and JWKS discovery happen at runtime; AUTH_SECRET, AUTH_URL — Auth.js
+#   session encryption + the OAuth redirect base. All are set on the service.
 CMD [ "bun", "server.js" ]
