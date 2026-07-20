@@ -1,24 +1,23 @@
 "use client";
 
-import { useAuth } from "@clerk/nextjs";
+import { useSession } from "next-auth/react";
 import { useQuery } from "@tanstack/react-query";
 import { userApi, type User } from "@/api";
 import { queryKeys } from "./keys";
 
-// Replaces userSlice + the fetchUser thunk that App.tsx fired once Clerk
-// confirmed a session. The backend JIT-creates the local user record on this
-// call, so the rest of the app gets user.id etc.
+// Fetches the local user record for the current Argus session. The backend
+// JIT-creates the row on this call, so the rest of the app gets user.id etc.
 //
-// Gated on Clerk's isSignedIn (the `enabled` flag) — the equivalent of the old
-// `if (isLoaded && isSignedIn) dispatch(fetchUser())` guard. Until Clerk loads,
-// the query stays idle instead of firing an unauthenticated request.
+// Gated on the Auth.js session status (the `enabled` flag): the query stays idle
+// until the session is confirmed authenticated, so it never fires an
+// unauthenticated request during hydration.
 export function useUser() {
-  const { isLoaded, isSignedIn } = useAuth();
+  const { status } = useSession();
 
   return useQuery<User>({
     queryKey: queryKeys.user,
     queryFn: () => userApi.getCurrent(),
-    enabled: isLoaded && isSignedIn === true,
+    enabled: status === "authenticated",
     staleTime: 5 * 60_000, // user record rarely changes within a session
   });
 }

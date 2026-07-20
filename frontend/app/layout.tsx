@@ -1,15 +1,12 @@
 import type { Metadata } from "next";
-import { ClerkProvider } from "@clerk/nextjs";
 import Providers from "./providers";
 import "./globals.css";
 
 // Render every route dynamically instead of statically prerendering at build
-// time. The whole app is wrapped in <ClerkProvider> and is auth-gated (chat) or
-// renders Clerk's <SignIn>/<SignUp> (login/register), all of which validate the
-// publishable key when rendered. Static prerender during `next build` would
-// therefore require a valid NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY baked in at build
-// time — brittle for Docker/CI builds. Forcing dynamic rendering defers Clerk to
-// request time. Applies to all nested routes via the root layout.
+// time. The app is session-aware (Auth.js) and auth-gated, so rendering depends
+// on request-time session state rather than build-time constants. Forcing
+// dynamic rendering keeps Docker/CI builds from needing any auth config baked
+// in. Applies to all nested routes via the root layout.
 export const dynamic = "force-dynamic";
 
 // Replaces the old react-helmet <Helmet> usage. Per-page titles override this
@@ -28,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ClerkProvider afterSignOutUrl="/login">
+    <>
       {/* suppressHydrationWarning: browser extensions (ColorZilla, Grammarly,
           etc.) inject attributes like `cz-shortcut-listen` onto <html>/<body>
           before React hydrates, which would otherwise trip a hydration
@@ -48,6 +45,6 @@ export default function RootLayout({
           <Providers>{children}</Providers>
         </body>
       </html>
-    </ClerkProvider>
+    </>
   );
 }

@@ -55,9 +55,7 @@ Render Dashboard → **New** → **Blueprint** → pick this repo. Render reads
 | ----------------------- | --------------------------------------------------------------------- |
 | `DATABASE_URL`          | Supabase **transaction** pooler: `...pooler.supabase.com:6543/postgres?pgbouncer=true` |
 | `DIRECT_URL`            | Supabase **session** pooler: `...pooler.supabase.com:5432/postgres`    |
-| `CLERK_PUBLISHABLE_KEY` | from Clerk dashboard                                                   |
-| `CLERK_SECRET_KEY`      | from Clerk dashboard (secret)                                          |
-| `CLERK_FRONTEND_URL`    | the frontend's Render URL, e.g. `https://dashchat-frontend.onrender.com` |
+| `ARGUS_ISSUER`          | Argus deployment origin, e.g. `https://auth.sudipmandal.com` (no secret needed — JWTs verified against its public JWKS) |
 | `AWS_ACCESS_KEY_ID`     | S3 credentials                                                        |
 | `AWS_SECRET_ACCESS_KEY` | S3 credentials (secret)                                               |
 | `AWS_REGION`            | e.g. `ap-southeast-1`                                                  |
@@ -71,8 +69,11 @@ Render Dashboard → **New** → **Blueprint** → pick this repo. Render reads
 | --------------------------------- | -------------------------------------------------------- |
 | `NEXT_PUBLIC_API_ORIGIN`          | the backend URL, e.g. `https://dashchat-backend.onrender.com` |
 | `NEXT_PUBLIC_SOCKET_URL`          | same backend URL (Socket.IO connects directly)           |
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | from Clerk dashboard                                    |
-| `CLERK_SECRET_KEY`                | from Clerk dashboard (secret, runtime only)              |
+| `AUTH_SECRET`                     | `openssl rand -base64 32` (session encryption, runtime)  |
+| `AUTH_URL`                        | this frontend's URL, e.g. `https://dashchat-frontend.onrender.com` |
+| `ARGUS_ISSUER`                    | Argus origin, e.g. `https://auth.sudipmandal.com`        |
+| `DASHCHAT_CLIENT_ID`              | the client id Argus registered for DashChat              |
+| `DASHCHAT_CLIENT_SECRET`          | the client secret (runtime only)                         |
 
 The `NEXT_PUBLIC_*` vars are **baked into the client bundle at build time**.
 Render passes a service's env vars into `docker build` as build args of the same
@@ -88,8 +89,10 @@ until the services exist. Easiest path:
 1. Deploy the backend first (or let both fail once). Note its
    `https://dashchat-backend.onrender.com` URL.
 2. Set `NEXT_PUBLIC_API_ORIGIN` / `NEXT_PUBLIC_SOCKET_URL` on the frontend to
-   that URL, and `CLERK_FRONTEND_URL` on the backend to the frontend's URL.
-3. Trigger a frontend rebuild.
+   that URL, and `AUTH_URL` to the frontend's own URL.
+3. Register the frontend's `${AUTH_URL}/api/auth/callback/argus` as a redirect
+   URI on the DashChat client in Argus (its `OAUTH_CLIENTS` config).
+4. Trigger a frontend rebuild.
 
 ## Migrations
 
@@ -113,9 +116,12 @@ DIRECT_URL="<session-pooler-url>" bun run prisma migrate deploy
 - The backend currently allows all origins (`cors: { origin: "*" }`) for both
   REST and Socket.IO. Tighten this to the frontend origin for production if you
   want to lock it down (`backend/server.ts`).
-- Auth is via Clerk Bearer tokens validated by `@clerk/express` on the backend
-  and `@clerk/nextjs` middleware (`frontend/proxy.ts`) on the frontend. `/api`
-  and `/socket.io` are public to the Next proxy and authenticated by the backend.
+- Auth is via **Argus** (OIDC). The frontend uses Auth.js (NextAuth v5) to run
+  the Authorization Code + PKCE flow against Argus and forwards the Argus access
+  token (a JWT) as a Bearer header; the backend verifies it against Argus's JWKS
+  (`backend/middleware/isAuthenticated.ts`). Route protection is Auth.js in
+  `frontend/proxy.ts`. `/api` (except `/api/auth/*`, owned by Auth.js) and
+  `/socket.io` are public to the Next proxy and authenticated by the backend.
 
 ## Local development is unchanged
 

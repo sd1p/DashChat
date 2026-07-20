@@ -3,7 +3,6 @@ import dotenv from "dotenv";
 import cors from "cors";
 import bodyParser from "body-parser";
 import { Server } from "socket.io";
-import { clerkMiddleware } from "@clerk/express";
 import userRoutes from "./routes/userRoutes";
 import chatRoutes from "./routes/chatRoutes";
 import messageRoutes from "./routes/messageRoutes";
@@ -36,8 +35,8 @@ app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
-// Attaches the Clerk auth state to every request (req.auth / getAuth(req)).
-app.use(clerkMiddleware());
+// Auth is per-route via isAuthenticated, which verifies the Argus-issued JWT
+// (Bearer token) against Argus's JWKS. No global auth middleware is needed.
 
 app.use("/api/user", userRoutes);
 app.use("/api/chat", chatRoutes);

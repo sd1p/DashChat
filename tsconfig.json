@@ -1,11 +1,14 @@
 {
-  // Backend (Node/Express) TypeScript config. Source lives in backend/, compiles
-  // to dist/ for production (`npm run build`); dev runs straight from .ts via tsx.
+  // Backend (Node/Express) TypeScript config. Source lives in backend/, runs on
+  // Bun (dev: `bun --watch backend/server.ts`; prod: `bun dist/server.js`). The
+  // package is ESM ("type": "module"). We use bundler-style resolution because
+  // Bun — not Node — resolves modules at runtime, which lets us keep
+  // extensionless relative imports and import ESM-only deps (jose) directly.
   // The frontend has its own tsconfig under frontend/.
   "compilerOptions": {
     "target": "ES2022",
-    "module": "node16",
-    "moduleResolution": "node16",
+    "module": "preserve",
+    "moduleResolution": "bundler",
     "lib": ["ES2022"],
     "outDir": "dist",
     "rootDir": "backend",

@@ -24,7 +24,13 @@ const nextConfig: NextConfig = {
   },
   async rewrites() {
     return [
-      { source: "/api/:path*", destination: `${API_ORIGIN}/api/:path*` },
+      // Forward the REST API to the Express backend — EXCEPT /api/auth/*, which
+      // Auth.js (NextAuth) owns for the OIDC sign-in flow and must be handled by
+      // Next itself. The negative lookahead keeps Auth.js routes local.
+      {
+        source: "/api/:path((?!auth/).*)",
+        destination: `${API_ORIGIN}/api/:path`,
+      },
     ];
   },
 };

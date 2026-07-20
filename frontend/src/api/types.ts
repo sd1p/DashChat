@@ -5,7 +5,7 @@
 
 export interface User {
   id: string;
-  clerkId: string;
+  authId: string;
   name: string;
   email: string | null;
   photo: string;

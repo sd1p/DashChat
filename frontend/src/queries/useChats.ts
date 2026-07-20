@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from "@clerk/nextjs";
+import { useSession } from "next-auth/react";
 import {
   useMutation,
   useQuery,
@@ -22,18 +22,18 @@ import { queryKeys } from "./keys";
 /**
  * Replaces chatsSlice + fetchChats: the current user's chats with unread counts.
  *
- * Gated on Clerk's isSignedIn (like useUser). Without this the query fires on
- * mount before Clerk's client session has hydrated, the request goes out with
- * no Bearer token, the backend returns 401, and the empty result gets cached —
- * so the sidebar shows no chats. Waiting for the session avoids that race.
+ * Gated on the Auth.js session status (like useUser). Without this the query
+ * fires on mount before the session has hydrated, the request goes out with no
+ * Bearer token, the backend returns 401, and the empty result gets cached — so
+ * the sidebar shows no chats. Waiting for the session avoids that race.
  */
 export function useChats(): UseQueryResult<Chat[]> {
-  const { isLoaded, isSignedIn } = useAuth();
+  const { status } = useSession();
 
   return useQuery<Chat[]>({
     queryKey: queryKeys.chats,
     queryFn: () => chatApi.list(),
-    enabled: isLoaded && isSignedIn === true,
+    enabled: status === "authenticated",
   });
 }
 

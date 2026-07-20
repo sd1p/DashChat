@@ -8,6 +8,11 @@
     ],
     "allowJs": true,
     "skipLibCheck": true,
+    // Pin the auto-included type packages. Without this, tsc scans every
+    // node_modules/@types entry point and fails on implicit type libraries that
+    // aren't installed (e.g. whatwg-url / webidl-conversions, referenced by
+    // @types/node but not present under Bun's install).
+    "types": ["node"],
     "strict": true,
     "noEmit": true,
     "esModuleInterop": true,
@@ -30,7 +35,6 @@
   },
   "include": [
     "next-env.d.ts",
-    "global.d.ts",
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",

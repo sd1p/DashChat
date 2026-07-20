@@ -15,7 +15,7 @@ https://api.dashchat.sudipmandal.com        (Backend — Express + Socket.IO on 
   → Supabase Postgres (transaction pooler at runtime, session pooler for migrations)
   → AWS S3 (image uploads, ap-south-1)
 
-Auth: Clerk (production instance, domain clerk.dashchat.sudipmandal.com)
+Auth: Argus (central OIDC identity provider, e.g. auth.sudipmandal.com)
 ```
 
 ## Services & URLs
@@ -25,7 +25,7 @@ Auth: Clerk (production instance, domain clerk.dashchat.sudipmandal.com)
 | Frontend | Render (web, Docker, free) | `dashchat.sudipmandal.com` → `dashchat-frontend.onrender.com` |
 | Backend | Cloud Run (`asia-northeast1`, min=0/max=1) | `api.dashchat.sudipmandal.com` → `dashchat-backend-...run.app` |
 | Database | Supabase Postgres | (external) |
-| Auth | Clerk (production) | `clerk.dashchat.sudipmandal.com` |
+| Auth | Argus (OIDC) | `auth.sudipmandal.com` |
 
 ### Why this split
 - **Backend on Cloud Run, not Vercel/serverless generally:** Socket.IO rooms + WebRTC
@@ -42,9 +42,9 @@ Auth: Clerk (production instance, domain clerk.dashchat.sudipmandal.com)
 | --- | --- | --- | --- |
 | `dashchat` | CNAME | `dashchat-frontend.onrender.com.` | Frontend (Render) |
 | `api.dashchat` | CNAME | `ghs.googlehosted.com.` | Backend (Cloud Run mapping) |
-| `clerk.dashchat` | CNAME | `frontend-api.clerk.services.` | Clerk prod |
-| `accounts.dashchat` | CNAME | `accounts.clerk.services.` | Clerk prod |
-| (+ Clerk DKIM/mail records) | CNAME | from Clerk dashboard | Clerk prod |
+
+Auth is handled by **Argus** (separate deployment, e.g. `auth.sudipmandal.com`) —
+no per-app auth DNS records are needed on the DashChat domain.
 
 - The custom domain must also be **added inside the Render frontend service**
   (Settings → Custom Domains) — DNS alone yields a Cloudflare `409 / error 1001`.
@@ -56,23 +56,27 @@ Auth: Clerk (production instance, domain clerk.dashchat.sudipmandal.com)
 ## Environment variables
 
 Backend (Cloud Run service env): `NODE_ENV`, `PORT` (Cloud Run injects), `DATABASE_URL`
-(Supabase :6543 pooler, `pgbouncer=true`), `DIRECT_URL` (:5432), `CLERK_PUBLISHABLE_KEY`,
-`CLERK_SECRET_KEY`, `CLERK_FRONTEND_URL`, `AWS_*`.
+(Supabase :6543 pooler, `pgbouncer=true`), `DIRECT_URL` (:5432), `ARGUS_ISSUER`
+(the Argus origin — no secret; tokens are verified against its public JWKS), `AWS_*`.
 
-Frontend (Render): `CLERK_SECRET_KEY` (runtime), and build-baked `NEXT_PUBLIC_API_ORIGIN`,
-`NEXT_PUBLIC_SOCKET_URL` (both `https://api.dashchat.sudipmandal.com`),
-`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`. `NEXT_PUBLIC_*` change requires a **rebuild**.
+Frontend (Render): `AUTH_SECRET` + `AUTH_URL` (Auth.js), `ARGUS_ISSUER`,
+`DASHCHAT_CLIENT_ID`, `DASHCHAT_CLIENT_SECRET` (all runtime), and build-baked
+`NEXT_PUBLIC_API_ORIGIN` / `NEXT_PUBLIC_SOCKET_URL` (both
+`https://api.dashchat.sudipmandal.com`). `NEXT_PUBLIC_*` change requires a **rebuild**.
 
 Migrations run on backend container start via `backend/entrypoint.sh`
 (`prisma migrate deploy` over `DIRECT_URL`).
 
-## Clerk production notes
-- Uses `pk_live` / `sk_live` keys (domain `clerk.dashchat.sudipmandal.com`).
-- **Google OAuth requires your own credentials on production** (dev instances use Clerk's
-  shared app; production does not). Create a Google OAuth *Web* client in project
-  `dashchat-392309`, set redirect URI `https://clerk.dashchat.sudipmandal.com/v1/oauth_callback`,
-  and paste Client ID + Secret into Clerk → SSO → Google → custom credentials. Leave
-  scopes at default (openid/email/profile).
+## Argus (auth) production notes
+- DashChat is a **trusted OIDC client** of Argus. Register it in Argus's
+  `OAUTH_CLIENTS` config with the production redirect URI
+  `https://dashchat.sudipmandal.com/api/auth/callback/argus`; Argus supplies the
+  `DASHCHAT_CLIENT_ID` / `DASHCHAT_CLIENT_SECRET` used above.
+- **Social login (Google, etc.) is configured once, on Argus** — not per app.
+  DashChat never sees provider credentials; users authenticate on Argus's hosted
+  UI and DashChat only validates the resulting JWT.
+- Since Argus is `skipConsent: true` for first-party apps, sign-in is a seamless
+  redirect with no consent screen.
 
 ## Rebuild / redeploy commands
 
@@ -90,5 +94,7 @@ gcloud run deploy dashchat-backend \
 Frontend: push to `master` → Render auto-deploys. Custom domains via Render dashboard.
 
 ## Security TODO
-- Rotate AWS access key + Clerk secret (were shared in plaintext during setup).
+- Rotate the AWS access key and the DashChat OAuth client secret (were shared in
+  plaintext during setup). The old Clerk keys can be deleted from the Clerk
+  dashboard once the cutover is confirmed.
 - Optionally tighten backend CORS from `*` to the frontend origin (`backend/server.ts`).

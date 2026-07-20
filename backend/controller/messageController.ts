@@ -116,6 +116,10 @@ export const sendMessage = asyncHandler(async (req, res) => {
     data: { latestMessageId: created.id, updatedAt: new Date() },
   });
 
+  // The sender has, by definition, seen their own message — advance their read
+  // pointer to it so their chat never shows an unread badge for it.
+  await markChatRead(chatId, req.user!.id);
+
   // Flatten chat.users (join rows -> User[]) so the socket payload matches the
   // shape the clients expect, and swap attachment keys for signed URLs.
   const message = await serializeMessageAttachments({

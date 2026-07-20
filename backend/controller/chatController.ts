@@ -87,6 +87,10 @@ export const getAllChats = asyncHandler(async (req, res) => {
     LEFT JOIN messages last
       ON last.id = cr."lastReadMessageId"
     WHERE m."createdAt" > COALESCE(last."createdAt", '-infinity')
+      -- Never count my own messages as unread (I've obviously "read" them).
+      -- Without this, a message I just sent is newer than my read pointer and
+      -- shows a spurious (1) badge on my own chat after refresh.
+      AND m."senderId" <> ${me}::uuid
     GROUP BY m."chatId"
   `;
   const byChat: Record<string, number> = Object.fromEntries(

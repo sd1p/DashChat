@@ -45,12 +45,10 @@ services:
         sync: false # transaction pooler: ...pooler.supabase.com:6543/postgres?pgbouncer=true
       - key: DIRECT_URL
         sync: false # session pooler:     ...pooler.supabase.com:5432/postgres
-      # --- Clerk ---
-      - key: CLERK_PUBLISHABLE_KEY
-        sync: false
-      - key: CLERK_SECRET_KEY
-        sync: false
-      - key: CLERK_FRONTEND_URL
+      # --- Argus (OIDC identity provider) ---
+      # The backend verifies incoming Bearer tokens against Argus's public JWKS;
+      # no secret is needed here. Point at the deployed Argus origin.
+      - key: ARGUS_ISSUER
         sync: false
       # --- AWS S3 (uploads) ---
       - key: AWS_ACCESS_KEY_ID
@@ -77,8 +75,20 @@ services:
     # passes these as --build-arg to `docker build` when marked as build args.
     # They must point at the deployed backend URL.
     envVars:
-      # Server-side, read at runtime (NOT baked into the bundle).
-      - key: CLERK_SECRET_KEY
+      # --- Auth.js (NextAuth v5), server-side at runtime (NOT baked in) ---
+      # Session encryption secret: openssl rand -base64 32
+      - key: AUTH_SECRET
+        sync: false
+      # Public origin of THIS frontend (the OAuth redirect base), e.g.
+      #   https://dashchat-frontend.onrender.com
+      - key: AUTH_URL
+        sync: false
+      # --- Argus (OIDC identity provider), server-side at runtime ---
+      - key: ARGUS_ISSUER
+        sync: false
+      - key: DASHCHAT_CLIENT_ID
+        sync: false
+      - key: DASHCHAT_CLIENT_SECRET
         sync: false
       # --- Build-time public config (set in dashboard) ---
       # Point both at the backend's Render URL, e.g.
@@ -87,13 +97,3 @@ services:
         sync: false
       - key: NEXT_PUBLIC_SOCKET_URL
         sync: false
-      - key: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
-        sync: false
-      - key: NEXT_PUBLIC_CLERK_SIGN_IN_URL
-        value: /login
-      - key: NEXT_PUBLIC_CLERK_SIGN_UP_URL
-        value: /register
-      - key: NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL
-        value: /
-      - key: NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL
-        value: /
