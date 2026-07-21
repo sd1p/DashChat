@@ -4,6 +4,14 @@ import { useState } from "react";
 import { Search as SearchIcon, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   useCreateGroupChat,
   useSelectedChat,
@@ -52,35 +60,20 @@ const NewGroupDialog = ({ onClose }: { onClose: () => void }) => {
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
-      onClick={onClose}
-    >
-      <div
-        className="flex max-h-[80vh] w-full max-w-md flex-col overflow-hidden rounded-lg border border-white/10 bg-brand-sidebar shadow-xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-          <h2 className="text-sm font-semibold text-white">New group chat</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-md p-1 text-white/60 transition-colors hover:bg-white/5 hover:text-white"
-            aria-label="Close"
-          >
-            <X className="size-4" />
-          </button>
-        </div>
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="flex max-h-[80vh] max-w-md flex-col gap-0 overflow-hidden border-white/10 bg-brand-sidebar p-0 text-white">
+        <DialogHeader className="border-b border-white/10 px-4 py-3">
+          <DialogTitle className="text-sm">New group chat</DialogTitle>
+        </DialogHeader>
 
         <div className="flex flex-col gap-3 overflow-y-auto p-4">
           {/* Group name */}
-          <input
+          <Input
             type="text"
             placeholder="Group name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="h-9 w-full rounded-md border border-white/10 bg-black/20 px-3 text-sm text-white outline-none transition-colors placeholder:text-white/40 focus:border-brand-accent/60 focus:bg-black/30"
+            className="border-white/10 bg-black/20 text-white placeholder:text-white/40 focus-visible:border-brand-accent/60"
           />
 
           {/* Selected members as removable chips */}
@@ -109,12 +102,12 @@ const NewGroupDialog = ({ onClose }: { onClose: () => void }) => {
           {/* Member search */}
           <div className="relative">
             <SearchIcon className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white/50" />
-            <input
+            <Input
               type="text"
               placeholder="Add members"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-9 w-full rounded-md border border-white/10 bg-black/20 pl-9 pr-3 text-sm text-white outline-none transition-colors placeholder:text-white/40 focus:border-brand-accent/60 focus:bg-black/30"
+              className="border-white/10 bg-black/20 pl-9 text-white placeholder:text-white/40 focus-visible:border-brand-accent/60"
             />
           </div>
 
@@ -153,17 +146,16 @@ const NewGroupDialog = ({ onClose }: { onClose: () => void }) => {
           )}
         </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-end gap-2 border-t border-white/10 px-4 py-3">
+        <DialogFooter className="border-t border-white/10 px-4 py-3">
           <Button variant="ghost" onClick={onClose} className="text-white/70">
             Cancel
           </Button>
           <Button onClick={handleCreate} disabled={!canCreate}>
             {createGroup.isPending ? "Creating…" : "Create group"}
           </Button>
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 

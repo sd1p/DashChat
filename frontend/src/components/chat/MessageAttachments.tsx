@@ -1,8 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Download, FileText, X } from "lucide-react";
+import { Download, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import type { Attachment } from "@/api";
 
 interface MessageAttachmentsProps {
@@ -122,30 +127,22 @@ const MessageAttachments = ({
         })}
       </div>
 
-      {lightbox && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
-          onClick={() => setLightbox(null)}
-          role="dialog"
-          aria-modal="true"
-        >
-          <button
-            type="button"
-            className="absolute right-4 top-4 flex size-10 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
-            onClick={() => setLightbox(null)}
-            aria-label="Close image"
-          >
-            <X className="size-5" />
-          </button>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={lightbox.url}
-            alt={lightbox.fileName}
-            className="max-h-full max-w-full rounded-lg object-contain"
-            onClick={(e) => e.stopPropagation()}
-          />
-        </div>
-      )}
+      <Dialog
+        open={Boolean(lightbox)}
+        onOpenChange={(open) => !open && setLightbox(null)}
+      >
+        {lightbox && (
+          <DialogContent className="flex max-h-[90vh] w-fit max-w-[95vw] items-center justify-center border-none bg-transparent p-0 shadow-none sm:max-w-[95vw]">
+            <DialogTitle className="sr-only">{lightbox.fileName}</DialogTitle>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={lightbox.url}
+              alt={lightbox.fileName}
+              className="max-h-[90vh] max-w-full rounded-lg object-contain"
+            />
+          </DialogContent>
+        )}
+      </Dialog>
     </>
   );
 };

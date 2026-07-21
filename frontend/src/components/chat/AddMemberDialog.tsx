@@ -1,8 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { Search as SearchIcon, X } from "lucide-react";
+import { Search as SearchIcon } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   useAddGroupMember,
   useRemoveGroupMember,
@@ -52,37 +59,22 @@ const AddMemberDialog = ({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
-      onClick={onClose}
-    >
-      <div
-        className="flex max-h-[80vh] w-full max-w-md flex-col overflow-hidden rounded-lg border border-white/10 bg-brand-sidebar shadow-xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-          <h2 className="text-sm font-semibold text-white">Manage members</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-md p-1 text-white/60 transition-colors hover:bg-white/5 hover:text-white"
-            aria-label="Close"
-          >
-            <X className="size-4" />
-          </button>
-        </div>
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="flex max-h-[80vh] max-w-md flex-col gap-0 overflow-hidden border-white/10 bg-brand-sidebar p-0 text-white">
+        <DialogHeader className="border-b border-white/10 px-4 py-3">
+          <DialogTitle className="text-sm">Manage members</DialogTitle>
+        </DialogHeader>
 
         <div className="flex flex-col gap-3 overflow-y-auto p-4">
           {/* Member search (add) */}
           <div className="relative">
             <SearchIcon className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white/50" />
-            <input
+            <Input
               type="text"
               placeholder="Add a user"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-9 w-full rounded-md border border-white/10 bg-black/20 pl-9 pr-3 text-sm text-white outline-none transition-colors placeholder:text-white/40 focus:border-brand-accent/60 focus:bg-black/30"
+              className="border-white/10 bg-black/20 pl-9 text-white placeholder:text-white/40 focus-visible:border-brand-accent/60"
             />
           </div>
 
@@ -166,8 +158,8 @@ const AddMemberDialog = ({
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 

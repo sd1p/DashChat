@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Search as SearchIcon } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
 import {
   useCreateDirectChat,
   useSelectedChat,
@@ -35,12 +36,12 @@ const Search = () => {
       <div className="p-3">
         <div className="relative">
           <SearchIcon className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white/50" />
-          <input
+          <Input
             type="text"
             placeholder="Search a user by name or email"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-9 w-full rounded-md border border-white/10 bg-black/20 pl-9 pr-3 text-sm text-white outline-none transition-colors placeholder:text-white/40 focus:border-brand-accent/60 focus:bg-black/30"
+            className="border-white/10 bg-black/20 pl-9 text-white placeholder:text-white/40 focus-visible:border-brand-accent/60"
           />
         </div>
       </div>

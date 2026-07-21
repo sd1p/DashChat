@@ -6,6 +6,7 @@ import { SessionProvider } from "next-auth/react";
 import { useState, type ReactNode } from "react";
 import { SelectedChatProvider } from "@/queries";
 import { ThemeProvider } from "@/lib/theme";
+import SessionErrorHandler from "@/components/SessionErrorHandler";
 
 // App-wide client providers. React Query replaces Redux Toolkit as the source
 // of truth for server state (user, chats, messages). One QueryClient per
@@ -27,6 +28,7 @@ export default function Providers({ children }: { children: ReactNode }) {
 
   return (
     <SessionProvider>
+      <SessionErrorHandler />
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
           <SelectedChatProvider>{children}</SelectedChatProvider>

@@ -1,5 +1,5 @@
 import axios, { type AxiosInstance } from "axios";
-import { getSession } from "next-auth/react";
+import { getSession, signOut } from "next-auth/react";
 
 // Shared axios instance for the whole API repository. Requests use relative
 // "/api/..." URLs, which the Next.js rewrite (next.config.ts) forwards to the
@@ -27,3 +27,24 @@ apiClient.interceptors.request.use(async (config) => {
   }
   return config;
 });
+
+// Guard so a burst of concurrent 401s (e.g. the whole app firing after a token
+// finally expires) triggers exactly one sign-out/redirect, not a stampede.
+let signingOut = false;
+
+// On 401, the access token is invalid/expired and the silent refresh in
+// auth.ts couldn't save it (refresh token also gone/revoked). The session is
+// effectively dead, so end it and send the user to Argus's login to get a fresh
+// one. Auth.js's jwt callback handles the *proactive* refresh; this is the
+// last-resort fallback for when that fails.
+apiClient.interceptors.response.use(
+  (res) => res,
+  async (error) => {
+    const status = error?.response?.status;
+    if (status === 401 && typeof window !== "undefined" && !signingOut) {
+      signingOut = true;
+      await signOut({ callbackUrl: "/login" });
+    }
+    return Promise.reject(error);
+  },
+);

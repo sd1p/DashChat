@@ -1,9 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Camera, Loader2, X } from "lucide-react";
+import { Camera, Loader2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useUpdateProfile } from "@/queries";
 import type { User } from "@/api";
 
@@ -30,9 +39,10 @@ function validateAvatar(file: File): string | null {
 }
 
 // Modal to edit the current user's profile: change display name and/or upload a
-// new avatar. Mirrors NewGroupDialog's overlay shell. The avatar uploads to S3
-// via PATCH /api/user; on success the ["user"] cache updates so the Navbar
-// reflects the change immediately. Rendered/dismissed by ProfileButton.
+// new avatar. Built on the shadcn Dialog (focus trap, Esc-to-close, aria for
+// free). The avatar uploads to S3 via PATCH /api/user; on success the ["user"]
+// cache updates so the Navbar reflects the change immediately. Rendered/
+// dismissed by the Navbar (mounts only while open).
 const ProfileDialog = ({
   user,
   onClose,
@@ -98,28 +108,13 @@ const ProfileDialog = ({
   const initial = (user.name?.[0] ?? "?").toUpperCase();
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
-      onClick={onClose}
-    >
-      <div
-        className="flex w-full max-w-sm flex-col overflow-hidden rounded-lg border border-white/10 bg-brand-sidebar shadow-xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-          <h2 className="text-sm font-semibold text-white">Edit profile</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-md p-1 text-white/60 transition-colors hover:bg-white/5 hover:text-white"
-            aria-label="Close"
-          >
-            <X className="size-4" />
-          </button>
-        </div>
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-sm border-white/10 bg-brand-sidebar text-white">
+        <DialogHeader>
+          <DialogTitle>Edit profile</DialogTitle>
+        </DialogHeader>
 
-        <div className="flex flex-col gap-4 p-4">
+        <div className="flex flex-col gap-4">
           {/* Avatar with an overlaid change button */}
           <div className="flex flex-col items-center gap-2">
             <button
@@ -156,28 +151,24 @@ const ProfileDialog = ({
 
           {/* Name */}
           <div className="flex flex-col gap-1.5">
-            <label
-              htmlFor="profile-name"
-              className="text-xs font-medium text-white/70"
-            >
+            <Label htmlFor="profile-name" className="text-white/70">
               Display name
-            </label>
-            <input
+            </Label>
+            <Input
               id="profile-name"
               type="text"
               placeholder="Your name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               maxLength={100}
-              className="h-9 w-full rounded-md border border-white/10 bg-black/20 px-3 text-sm text-white outline-none transition-colors placeholder:text-white/40 focus:border-brand-accent/60 focus:bg-black/30"
+              className="border-white/10 bg-black/20 text-white placeholder:text-white/40 focus-visible:border-brand-accent/60"
             />
           </div>
 
           {error && <p className="text-sm text-red-400">{error}</p>}
         </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-end gap-2 border-t border-white/10 px-4 py-3">
+        <DialogFooter>
           <Button variant="ghost" onClick={onClose} className="text-white/70">
             Cancel
           </Button>
@@ -191,9 +182,9 @@ const ProfileDialog = ({
               "Save changes"
             )}
           </Button>
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 
