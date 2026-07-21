@@ -5,6 +5,7 @@ import { LogOut, MessageSquare } from "lucide-react";
 import { useUser } from "@/queries";
 import { logout } from "@/lib/logout";
 import ThemeToggle from "@/components/ThemeToggle";
+import { Skeleton } from "@/components/ui/skeleton";
 import ProfileDialog from "./ProfileDialog";
 
 // Ported from _legacy/src/components/Sidebar/Navbar.tsx. The old SCSS: navbar
@@ -14,7 +15,7 @@ import ProfileDialog from "./ProfileDialog";
 // + sign-out on the right. Sign-out clears the Auth.js session and returns to
 // /login (account management itself lives on Argus, the identity provider).
 const Navbar = () => {
-  const { data: user } = useUser();
+  const { data: user, isLoading } = useUser();
 
   // The avatar/sign-out control is client-only (it reads session state). Gate it
   // behind a mounted flag so the server and first client render agree (a
@@ -36,13 +37,24 @@ const Navbar = () => {
       </div>
       <div className="flex items-center gap-2.5">
         <ThemeToggle />
-        <span className="max-w-[8rem] truncate text-sm text-chat-header-fg/80">
-          {user?.name}
-        </span>
-        {/* Avatar (opens the profile-edit modal) + sign-out. Sign-out ends the
-            Auth.js session and returns to /login. */}
-        {mounted ? (
-          <div className="flex items-center gap-2">
+        {/* Name + avatar show skeletons until the client has mounted AND the
+            user record has loaded, so we never flash a blank name or a broken
+            <img>. Same-sized placeholders keep the header from shifting. */}
+        {!mounted || isLoading || !user ? (
+          <>
+            <Skeleton className="h-4 w-20 rounded bg-white/10" />
+            <Skeleton className="size-7 rounded-full bg-white/10" />
+            <div className="grid size-7 place-items-center text-chat-header-fg/40">
+              <LogOut className="size-4" />
+            </div>
+          </>
+        ) : (
+          <>
+            <span className="max-w-[8rem] truncate text-sm text-chat-header-fg/80">
+              {user.name}
+            </span>
+            {/* Avatar (opens the profile-edit modal) + sign-out. Sign-out ends
+                the Auth.js session and returns to /login. */}
             <button
               type="button"
               onClick={() => setProfileOpen(true)}
@@ -51,7 +63,7 @@ const Navbar = () => {
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={user?.photo}
+                src={user.photo}
                 alt=""
                 className="size-7 rounded-full object-cover"
               />
@@ -64,9 +76,7 @@ const Navbar = () => {
             >
               <LogOut className="size-4" />
             </button>
-          </div>
-        ) : (
-          <div className="size-7 rounded-full bg-white/10" aria-hidden />
+          </>
         )}
       </div>
 

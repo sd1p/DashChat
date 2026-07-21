@@ -1,8 +1,10 @@
 "use client";
 
+import { useSession } from "next-auth/react";
 import Sidebar from "@/components/sidebar/Sidebar";
 import Chat from "./Chat";
 import Welcome from "./Welcome";
+import AppShellSkeleton from "./AppShellSkeleton";
 import CallOverlay from "@/components/call/CallOverlay";
 import { useChatSocket } from "./useChatSocket";
 import { useWebRTCCall } from "./useWebRTCCall";
@@ -18,7 +20,8 @@ import { cn } from "@/lib/utils";
 //     opened; opening one slides the chat pane over it, and the chat header's
 //     back button clears the selection to return to the list.
 const ChatHome = () => {
-  const { data: user } = useUser();
+  const { status } = useSession();
+  const { data: user, isLoading: userLoading } = useUser();
   const { selectedChatId } = useSelectedChat();
 
   const { socket, emitNewMessage, emitTyping, emitNotTyping } = useChatSocket({
@@ -36,6 +39,14 @@ const ChatHome = () => {
   });
 
   const hasChat = Boolean(selectedChatId);
+
+  // Show the full app-shell skeleton until the session is resolved and the user
+  // record has loaded, so the first paint is the app's shape rather than a
+  // blank screen or a header with a missing name/avatar. All hooks above run
+  // unconditionally, so this early return is safe.
+  if (status === "loading" || (status === "authenticated" && (userLoading || !user))) {
+    return <AppShellSkeleton />;
+  }
 
   return (
     <div className="flex h-[100dvh] w-full overflow-hidden bg-background">
