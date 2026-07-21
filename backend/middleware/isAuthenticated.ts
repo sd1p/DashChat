@@ -67,12 +67,13 @@ export const isAuthenticated = asyncHandler(async (req, res, next) => {
     return;
   }
 
-  // Map the token → a local user, syncing profile from the token's claims.
-  // Argus requires a verified email before login, so `email` is present for
-  // password/social sign-ins; `picture` comes from Argus's
-  // customAccessTokenClaims. We keep the local record in sync with the identity
-  // provider so profile changes / the avatar propagate — but only WRITE when a
-  // field actually differs, so steady-state requests do no extra DB writes.
+  // Map the token → a local user. On FIRST sight we seed the local record from
+  // the token's claims (Argus requires a verified email before login, so
+  // `email` is present for password/social sign-ins; `picture` comes from
+  // Argus's customAccessTokenClaims). After that we never re-sync: the local
+  // row is the source of truth, so profile edits made here (name/avatar via
+  // PATCH /api/user) stick instead of being overwritten by the token on the
+  // next request.
   const email = claims.email ?? null;
   const name = claims.name || email || "User";
   const photo = claims.picture;
@@ -82,15 +83,6 @@ export const isAuthenticated = asyncHandler(async (req, res, next) => {
   if (!user) {
     user = await prisma.user.create({
       data: { authId: argusId, name, email, ...(photo ? { photo } : {}) },
-    });
-  } else if (
-    user.name !== name ||
-    user.email !== email ||
-    (photo && user.photo !== photo)
-  ) {
-    user = await prisma.user.update({
-      where: { authId: argusId },
-      data: { name, email, ...(photo ? { photo } : {}) },
     });
   }
 

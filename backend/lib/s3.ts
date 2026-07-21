@@ -57,6 +57,19 @@ export async function putObject(params: {
   );
 }
 
+// Virtual-hosted-style public URL for an object. The bucket allows public
+// reads, so avatars (unlike chat attachments, which are served via short-lived
+// signed GETs) store this stable URL directly on the user row — no signing on
+// read. Falls back to the path-style host when no region is set.
+export function publicUrl(key: string): string {
+  const region = process.env.AWS_REGION;
+  const host = region
+    ? `${bucket()}.s3.${region}.amazonaws.com`
+    : `${bucket()}.s3.amazonaws.com`;
+  const encodedKey = key.split("/").map(encodeURIComponent).join("/");
+  return `https://${host}/${encodedKey}`;
+}
+
 // Build a time-limited URL the browser can load directly (e.g. from <img src>).
 export async function getSignedGetUrl(key: string): Promise<string> {
   return getSignedUrl(

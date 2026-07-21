@@ -6,7 +6,7 @@
 // Each hook wraps a resource client from @/api and reads/writes the shared
 // QueryClient cache keyed by queryKeys.
 export { queryKeys } from "./keys";
-export { useUser } from "./useUser";
+export { useUser, useUpdateProfile } from "./useUser";
 export {
   useChats,
   useResetNotification,

@@ -129,6 +129,10 @@ export interface AuthResponse {
   user: User;
 }
 
+export interface UpdateProfileResponse {
+  user: User;
+}
+
 export interface MessagesResponse {
   messages: Message[];
 }

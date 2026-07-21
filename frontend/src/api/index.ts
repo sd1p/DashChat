@@ -30,6 +30,7 @@ export type {
   GroupMemberBody,
   SendMessageBody,
   AuthResponse,
+  UpdateProfileResponse,
   MessagesResponse,
   SendMessageResponse,
   UploadResponse,
