@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import { io } from "socket.io-client";
+import { getSession } from "next-auth/react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { AppSocket } from "@/socket";
 import type { Chat, Message } from "@/api";
@@ -46,10 +47,25 @@ export function useChatSocket({
   useEffect(() => {
     if (!userId) return;
 
-    const socket: AppSocket = SOCKET_URL ? io(SOCKET_URL) : io();
+    // Supply the Argus access token on every (re)connect via the async auth
+    // callback so a reconnection after a token refresh sends the fresh token —
+    // the backend's socketAuth handshake verifies it against Argus's JWKS.
+    const auth = (
+      cb: (data: { token?: string }) => void,
+    ) => {
+      getSession()
+        .then((session) => cb({ token: session?.accessToken }))
+        .catch(() => cb({}));
+    };
+
+    const socket: AppSocket = SOCKET_URL
+      ? io(SOCKET_URL, { auth })
+      : io({ auth });
     socketRef.current = socket;
 
-    socket.emit("setup", userId);
+    // Identity is derived from the authenticated handshake server-side, so
+    // setup takes no argument.
+    socket.emit("setup");
 
     socket.on("notify", (incoming: Message) => {
       const openChatId = selectedChatIdRef.current;

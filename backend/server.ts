@@ -12,7 +12,9 @@ import errorHandler from "./middleware/errorHandler";
 import type {
   ClientToServerEvents,
   ServerToClientEvents,
+  SocketData,
 } from "./types/socket";
+import { socketAuth } from "./middleware/socketAuth";
 
 dotenv.config({ path: "backend/config/.env" });
 
@@ -58,21 +60,31 @@ const server = app.listen(PORT, () =>
 );
 
 //socket
-const io = new Server<ClientToServerEvents, ServerToClientEvents>(server, {
+const io = new Server<
+  ClientToServerEvents,
+  ServerToClientEvents,
+  Record<string, never>,
+  SocketData
+>(server, {
   pingTimeout: 60000,
   cors: { origin: allowedOrigins },
 });
 
-io.on("connection", (socket) => {
-  console.log("connected to socket.io");
+// Authenticate every connection at the handshake against Argus's JWKS — the
+// same tokens the REST API trusts. Rejected handshakes never reach "connection".
+io.use(socketAuth);
 
-  //connecting to user
-  socket.on("setup", (userId) => {
-    if (userId) {
-      socket.join(userId);
-      socket.emit("connected");
-      console.log("logged: " + userId);
-    }
+io.on("connection", (socket) => {
+  // socket.data.userId is the verified Argus identity set by socketAuth.
+  const userId = socket.data.userId;
+  console.log("connected to socket.io: " + userId);
+
+  // Join the caller's own room using the authenticated id — a client can no
+  // longer register itself under an arbitrary userId.
+  socket.on("setup", () => {
+    socket.join(userId);
+    socket.emit("connected");
+    console.log("logged: " + userId);
   });
 
   //joining chat room
@@ -103,9 +115,12 @@ io.on("connection", (socket) => {
   // "setup"). The server never inspects SDP/ICE payloads; media itself flows
   // peer-to-peer and never touches this server.
   socket.on("callUser", ({ toUserId, chatId, offer, from, withVideo }) => {
+    // Trust the authenticated identity for the caller id, not the client-sent
+    // from.id — the callee's incoming-call UI still shows the profile fields
+    // (name/photo) the client provided.
     socket
       .to(toUserId)
-      .emit("incomingCall", { fromUserId: from.id, chatId, offer, from, withVideo });
+      .emit("incomingCall", { fromUserId: userId, chatId, offer, from, withVideo });
   });
   socket.on("answerCall", ({ toUserId, answer }) => {
     socket.to(toUserId).emit("callAnswered", { answer });

@@ -34,7 +34,8 @@ export interface ServerToClientEvents {
 
 // Events this client emits to the server.
 export interface ClientToServerEvents {
-  setup: (userId: string) => void;
+  // Identity comes from the authenticated handshake server-side; no argument.
+  setup: () => void;
   joinChat: (chatId: string) => void;
   newMessage: (message: Message) => void;
   typing: (chatId: string) => void;

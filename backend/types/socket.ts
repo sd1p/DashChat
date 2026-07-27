@@ -3,6 +3,14 @@ import type { Chat, Message, User } from "@prisma/client";
 // Socket.IO event contracts — the server side of the same shapes the frontend
 // declares in frontend/src/socket.ts.
 
+// Per-connection state populated by the socketAuth handshake middleware from
+// the verified Argus token. Handlers read socket.data.userId as the trusted
+// identity rather than a client-supplied value.
+export interface SocketData {
+  user: User;
+  userId: string;
+}
+
 // A message as broadcast over the socket: the Prisma Message plus the hydrated
 // sender and chat (with members) the notify handler needs to route it.
 export interface SocketMessage extends Message {
@@ -27,7 +35,9 @@ export interface CallUser {
 
 // Events the client emits to the server.
 export interface ClientToServerEvents {
-  setup: (userId: string) => void;
+  // Identity comes from the authenticated handshake (socket.data.userId), so
+  // setup takes no argument — the server joins the caller's own room.
+  setup: () => void;
   joinChat: (chatId: string) => void;
   newMessage: (message: SocketMessage) => void;
   typing: (room: string) => void;
