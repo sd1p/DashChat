@@ -44,13 +44,18 @@ const Chat = ({
   const [isTyping, setIsTyping] = useState(false);
   const [showAddMember, setShowAddMember] = useState(false);
 
-  // Online presence for members of this chat (from Hermes presence events),
-  // keyed by authId (the Argus subject Hermes reports). The AppSocket adapter
-  // forwards Hermes's native `presence`/`roster` events verbatim but doesn't
-  // type them, so usePresence takes a minimal structural socket view.
+  // Global online presence: watch every OTHER member of this chat by authId
+  // (the Argus subject Hermes reports). Works site-wide — a member is online
+  // whenever they have DashChat open, no need for them to have this chat open.
+  // The AppSocket adapter forwards Hermes's native watch/user-online events
+  // verbatim but doesn't type them, so usePresence takes a structural view.
+  const watchedAuthIds = (chatDetails?.users ?? [])
+    .filter((u) => u.id !== user?.id)
+    .map((u) => u.authId)
+    .filter(Boolean);
   const onlineAuthIds = usePresence(
     socket as Parameters<typeof usePresence>[0],
-    selectedChatId,
+    watchedAuthIds,
   );
 
   // Peer's typing indicator (the server broadcasts typing/notTyping to the room).
@@ -77,6 +82,8 @@ const Chat = ({
   const chatName = chatDetails?.chatName;
   const peer = users.find((u) => u.id !== user?.id) ?? users[0];
   const peerOnline = peer?.authId ? onlineAuthIds.has(peer.authId) : false;
+  // Group chats show a live count of how many other members are online.
+  const onlineCount = onlineAuthIds.size;
   const title = !chatName ? peer?.name ?? "" : !isGroupChat ? peer?.name ?? "" : chatName;
   const avatar = isGroupChat ? users[0]?.photo : peer?.photo;
   const isLoading = !chatDetails;
@@ -119,9 +126,13 @@ const Chat = ({
               <p className="h-4 truncate text-xs text-brand-accent">
                 {isTyping
                   ? "typing…"
-                  : !isGroupChat && peerOnline
-                    ? "online"
-                    : ""}
+                  : isGroupChat
+                    ? onlineCount > 0
+                      ? `${onlineCount} online`
+                      : ""
+                    : peerOnline
+                      ? "online"
+                      : ""}
               </p>
             </div>
           </>
