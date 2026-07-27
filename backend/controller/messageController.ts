@@ -133,10 +133,14 @@ export const sendMessage = asyncHandler(async (req, res) => {
   // Fan the saved message out to every recipient via Hermes (the authoritative
   // backend→client path that replaced the old client-emitted `newMessage`).
   // Best-effort — a Redis/Hermes hiccup must not fail the send.
-  const recipientIds = (created.chat?.users ?? [])
-    .map((cu) => cu.user.id)
-    .filter((id) => id !== req.user!.id);
-  await notifyNewMessage(message, recipientIds);
+  //
+  // Target each recipient by their Argus subject (authId), NOT the local user
+  // id: Hermes joins every socket to `user:<token.sub>`, and the token sub is
+  // the Argus id. Emitting to `user:<localId>` would land in an empty room.
+  const recipientAuthIds = (created.chat?.users ?? [])
+    .map((cu) => cu.user.authId)
+    .filter((authId) => authId !== req.user!.authId);
+  await notifyNewMessage(message, recipientAuthIds);
 
   res.status(201).json({ message });
 });
@@ -152,8 +156,10 @@ export const getMessages = asyncHandler(async (req, res) => {
 
   // Authorize this member's sockets to join the chat's Hermes room, so typing
   // relays and any future room broadcasts reach them. Argus clients can't join
-  // arbitrary rooms without a backend grant. Best-effort.
-  await grantChatAccess(req.user!.id, chatId);
+  // arbitrary rooms without a backend grant. Grant targets the user by their
+  // Argus subject (authId) — Hermes keys grants by `user:<token.sub>`, so a
+  // local id here would grant the wrong user. Best-effort.
+  await grantChatAccess(req.user!.authId, chatId);
 
   const rows = await prisma.message.findMany({
     where: { chatId },
