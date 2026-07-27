@@ -1,9 +1,9 @@
 import { createRemoteJWKSet, jwtVerify, type JWTPayload } from "jose";
 
 // Verifies an Argus-issued OIDC access token (EdDSA JWT). This is the single
-// source of truth for token verification, shared by the REST middleware
-// (isAuthenticated) and the Socket.IO handshake (socketAuth) so both the API
-// and the realtime channel trust exactly the same tokens.
+// source of truth for token verification used by the REST middleware
+// (isAuthenticated). Realtime auth is handled by Hermes, which verifies the
+// same Argus tokens against the same JWKS on its socket handshake.
 //
 // Argus is the central identity provider. It signs access tokens with EdDSA and
 // publishes its public keys at ${ARGUS_ISSUER}/api/auth/jwks. We verify each

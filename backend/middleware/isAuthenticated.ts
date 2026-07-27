@@ -4,9 +4,9 @@ import { resolveUserFromClaims } from "../lib/authenticateUser";
 
 // Express auth middleware. Verifies the incoming `Authorization: Bearer <jwt>`
 // token against Argus's JWKS (see lib/argus) and attaches the resolved local
-// user (see lib/authenticateUser) to req.user. Both the verification and the
-// user mapping are shared with the Socket.IO handshake (middleware/socketAuth)
-// so REST and realtime trust exactly the same tokens.
+// user (see lib/authenticateUser) to req.user. Realtime auth is handled
+// separately by Hermes, which verifies the same Argus tokens on its socket
+// handshake — so REST and realtime trust exactly the same tokens.
 
 export const isAuthenticated = asyncHandler(async (req, res, next) => {
   const token = bearerToken(req.headers.authorization);

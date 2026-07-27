@@ -3,6 +3,7 @@ import prisma from "../config/prisma";
 import { assertChatMember } from "../lib/chatAccess";
 import { serializeMessageAttachments } from "../lib/attachments";
 import { fetchLinkPreview } from "../lib/linkPreview";
+import { grantChatAccess, notifyNewMessage } from "../lib/hermes";
 
 // Columns selected for attachments on any message read. `key` is included so we
 // can sign it; serializeMessageAttachments strips it before responding.
@@ -129,6 +130,14 @@ export const sendMessage = asyncHandler(async (req, res) => {
       : created.chat,
   });
 
+  // Fan the saved message out to every recipient via Hermes (the authoritative
+  // backend→client path that replaced the old client-emitted `newMessage`).
+  // Best-effort — a Redis/Hermes hiccup must not fail the send.
+  const recipientIds = (created.chat?.users ?? [])
+    .map((cu) => cu.user.id)
+    .filter((id) => id !== req.user!.id);
+  await notifyNewMessage(message, recipientIds);
+
   res.status(201).json({ message });
 });
 
@@ -140,6 +149,11 @@ export const getMessages = asyncHandler(async (req, res) => {
   }
 
   if (!(await assertChatMember(chatId, req.user!.id, res))) return;
+
+  // Authorize this member's sockets to join the chat's Hermes room, so typing
+  // relays and any future room broadcasts reach them. Argus clients can't join
+  // arbitrary rooms without a backend grant. Best-effort.
+  await grantChatAccess(req.user!.id, chatId);
 
   const rows = await prisma.message.findMany({
     where: { chatId },

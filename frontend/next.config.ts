@@ -1,13 +1,13 @@
 import type { NextConfig } from "next";
 
-// Backend (Express + Socket.IO + Prisma) runs on :5001. We proxy the REST API
+// Backend (Express + Prisma REST API) runs on :5001. We proxy the REST API
 // through Next so the browser keeps using same-origin relative URLs
 // (axios "/api/...") — the equivalent of the old vite.config.js `server.proxy`.
 //
-// Socket.IO is NOT rewritten here: Next 16 force-redirects the required
-// trailing slash (/socket.io/ -> /socket.io, 308) which the backend can't
-// answer, breaking the handshake. The client connects to the backend directly
-// via NEXT_PUBLIC_SOCKET_URL instead (see src/components/chat/useChatSocket.ts).
+// Realtime is NOT proxied here: it's served by Hermes (a separate Socket.IO
+// service), which the client connects to directly via NEXT_PUBLIC_HERMES_URL
+// (see src/components/chat/useChatSocket.ts). The backend no longer runs a
+// socket server.
 //
 // Override the API target with NEXT_PUBLIC_API_ORIGIN if the backend moves.
 const API_ORIGIN = process.env.NEXT_PUBLIC_API_ORIGIN ?? "http://127.0.0.1:5001";
