@@ -55,11 +55,6 @@ async function emit(body: EmitBody | GrantBody): Promise<void> {
     if (!res.ok) {
       const detail = await res.text().catch(() => "");
       console.error(`[hermes] /api/emit ${res.status}: ${detail.slice(0, 200)}`);
-    } else {
-      // TEMP diagnostic — confirm emits fire and to which room.
-      console.log(
-        `[hermes] emit ok kind=${body.kind} room=${body.room} ${"event" in body ? "event=" + body.event : ""}`,
-      );
     }
   } catch (err) {
     console.error(
