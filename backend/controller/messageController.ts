@@ -140,6 +140,10 @@ export const sendMessage = asyncHandler(async (req, res) => {
   const recipientAuthIds = (created.chat?.users ?? [])
     .map((cu) => cu.user.authId)
     .filter((authId) => authId !== req.user!.authId);
+  // TEMP diagnostic — confirm recipients resolve to authIds on send.
+  console.log(
+    `[notify] chat=${chatId} sender=${req.user!.authId} recipients=${JSON.stringify(recipientAuthIds)}`,
+  );
   await notifyNewMessage(message, recipientAuthIds);
 
   res.status(201).json({ message });
