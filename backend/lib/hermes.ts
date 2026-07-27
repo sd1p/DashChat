@@ -73,11 +73,13 @@ async function emit(body: EmitBody | GrantBody): Promise<void> {
  */
 export async function notifyNewMessage(
   message: unknown,
-  recipientIds: string[],
+  // Argus subjects (User.authId), NOT local user ids — Hermes joins each socket
+  // to `user:<token.sub>`, which is the authId.
+  recipientAuthIds: string[],
 ): Promise<void> {
   await Promise.all(
-    recipientIds.map((uid) =>
-      emit({ kind: "emit", room: userRoom(uid), event: "notify", data: message }),
+    recipientAuthIds.map((authId) =>
+      emit({ kind: "emit", room: userRoom(authId), event: "notify", data: message }),
     ),
   );
 }
@@ -89,8 +91,10 @@ export async function notifyNewMessage(
  * a user opens/loads a chat they're a member of. Best-effort.
  */
 export async function grantChatAccess(
-  userId: string,
+  // The user's Argus subject (User.authId) — Hermes keys grants by
+  // `user:<token.sub>`, so a local id here would grant the wrong user.
+  authId: string,
   chatId: string,
 ): Promise<void> {
-  await emit({ kind: "grant", userId, room: chatRoom(chatId) });
+  await emit({ kind: "grant", userId: authId, room: chatRoom(chatId) });
 }

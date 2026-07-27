@@ -33,8 +33,10 @@ const ChatHome = () => {
   // incoming call rings regardless of which chat — if any — is open.
   const call = useWebRTCCall({
     socket,
+    // WebRTC signaling routes through Hermes by room (`user:<authId>`), so the
+    // call identity id must be the Argus subject (authId), not the local id.
     selfUser: user
-      ? { id: user.id, name: user.name, photo: user.photo }
+      ? { id: user.authId, name: user.name, photo: user.photo }
       : null,
   });
 

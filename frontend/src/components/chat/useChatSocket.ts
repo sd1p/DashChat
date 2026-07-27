@@ -122,7 +122,11 @@ function makeAdapter(hermes: Socket): AppSocket {
         });
         return adapter;
       }
-      // `newMessage` and anything else: no-op (backend-published now).
+      // `newMessage` is a no-op (message fan-out is backend-published now).
+      if (event === "newMessage") return adapter;
+      // Anything else (e.g. `roster`, `peers`, `join` acks) is a native Hermes
+      // event — forward verbatim, preserving any ack callback in args.
+      hermes.emit(event, ...args);
       return adapter;
     },
 

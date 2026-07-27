@@ -5,6 +5,7 @@ import { ArrowLeft, UserPlus, Phone, Video } from "lucide-react";
 import Messages from "./Messages";
 import Input from "./Input";
 import AddMemberDialog from "./AddMemberDialog";
+import { usePresence } from "./usePresence";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useChatDetails, useSelectedChat, useUser } from "@/queries";
@@ -43,6 +44,15 @@ const Chat = ({
   const [isTyping, setIsTyping] = useState(false);
   const [showAddMember, setShowAddMember] = useState(false);
 
+  // Online presence for members of this chat (from Hermes presence events),
+  // keyed by authId (the Argus subject Hermes reports). The AppSocket adapter
+  // forwards Hermes's native `presence`/`roster` events verbatim but doesn't
+  // type them, so usePresence takes a minimal structural socket view.
+  const onlineAuthIds = usePresence(
+    socket as Parameters<typeof usePresence>[0],
+    selectedChatId,
+  );
+
   // Peer's typing indicator (the server broadcasts typing/notTyping to the room).
   useEffect(() => {
     if (!socket) return;
@@ -66,6 +76,7 @@ const Chat = ({
   const users = chatDetails?.users ?? [];
   const chatName = chatDetails?.chatName;
   const peer = users.find((u) => u.id !== user?.id) ?? users[0];
+  const peerOnline = peer?.authId ? onlineAuthIds.has(peer.authId) : false;
   const title = !chatName ? peer?.name ?? "" : !isGroupChat ? peer?.name ?? "" : chatName;
   const avatar = isGroupChat ? users[0]?.photo : peer?.photo;
   const isLoading = !chatDetails;
@@ -106,7 +117,11 @@ const Chat = ({
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold text-white">{title}</p>
               <p className="h-4 truncate text-xs text-brand-accent">
-                {isTyping ? "typing…" : ""}
+                {isTyping
+                  ? "typing…"
+                  : !isGroupChat && peerOnline
+                    ? "online"
+                    : ""}
               </p>
             </div>
           </>
@@ -120,7 +135,7 @@ const Chat = ({
               size="icon"
               onClick={() =>
                 onStartCall(
-                  { id: peer.id, name: peer.name, photo: peer.photo },
+                  { id: peer.authId, name: peer.name, photo: peer.photo },
                   selectedChatId,
                   false,
                 )
@@ -135,7 +150,7 @@ const Chat = ({
               size="icon"
               onClick={() =>
                 onStartCall(
-                  { id: peer.id, name: peer.name, photo: peer.photo },
+                  { id: peer.authId, name: peer.name, photo: peer.photo },
                   selectedChatId,
                   true,
                 )
