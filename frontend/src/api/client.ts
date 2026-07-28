@@ -1,18 +1,27 @@
 import axios, { type AxiosInstance } from "axios";
 import { getSession, signOut } from "next-auth/react";
 
-// Shared axios instance for the whole API repository. Requests use relative
-// "/api/..." URLs, which the Next.js rewrite (next.config.ts) forwards to the
-// Express backend (except /api/auth/*, owned by Auth.js).
+// Shared axios instance for the whole API repository.
 //
-// The interceptor attaches the Argus access token (a JWT issued by our OIDC
-// provider) as a Bearer header so the backend can verify it against Argus's
-// JWKS. The token lives on the Auth.js session (stashed in the jwt/session
-// callbacks in src/auth.ts); getSession() reads it client-side.
+// PERF: app REST calls go DIRECTLY to the backend origin (NEXT_PUBLIC_API_ORIGIN,
+// e.g. the Fly.io backend in Singapore) rather than through the Next.js rewrite
+// proxy. The rewrite tunnels every /api/* request browser → Vercel's server →
+// backend → back; with the backend in Singapore that detour added 250–700ms per
+// call. Calling the backend host directly removes that hop (the backend allows
+// CORS from any origin, so cross-origin works). Auth routes are NOT affected:
+// getSession()/signOut() below use next-auth/react against the same-origin
+// /api/auth/* on Vercel, not this client.
 //
-// Client-only: getSession() hits /api/auth/session, so any component using the
-// resource clients (userApi/chatApi/messageApi) must be a "use client" component.
-export const apiClient: AxiosInstance = axios.create();
+// If NEXT_PUBLIC_API_ORIGIN is unset we fall back to relative "/api/..." URLs,
+// which still work via the rewrite (just slower) — e.g. in local dev.
+//
+// The interceptor attaches the Argus access token as a Bearer header so the
+// backend can verify it against Argus's JWKS.
+const API_ORIGIN = process.env.NEXT_PUBLIC_API_ORIGIN;
+
+export const apiClient: AxiosInstance = axios.create({
+  baseURL: API_ORIGIN || undefined,
+});
 
 // getSession() does a NETWORK fetch to /api/auth/session every call — calling it
 // per request adds a round-trip to every API interaction. The Argus access token
