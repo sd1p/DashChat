@@ -1,0 +1,10 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- DashChat favicon: brand rounded square with a lucide MessageSquare
+       bubble. Colors match the app brand palette (brand-sidebar background,
+       brand-accent stroke). -->
+  <rect width="64" height="64" rx="16" fill="#26243f"/>
+  <g transform="translate(18 18) scale(1.16)" fill="none" stroke="#a7bcff"
+     stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+  </g>
+</svg>
