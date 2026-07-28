@@ -51,4 +51,9 @@ app.get("/", (_req: Request, res: Response) => {
 });
 
 const PORT = process.env.PORT;
-app.listen(PORT, () => console.log(`Server Started on port ${PORT}`));
+// Bind 0.0.0.0 explicitly — Fly.io (and most container hosts) route to the
+// machine's public interface, not localhost. Express defaults to all
+// interfaces, but being explicit avoids a silent "app not reachable" on deploy.
+app.listen(Number(PORT), "0.0.0.0", () =>
+  console.log(`Server Started on port ${PORT}`),
+);
