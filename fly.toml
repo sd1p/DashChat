@@ -1,0 +1,47 @@
+# Fly.io config for the DashChat backend (Express + Prisma REST API, Bun/Docker).
+#
+# Why Fly: a real always-on VM (no free-tier cold-start sleep like Render), so
+# the first request after idle is fast. Region `sin` (Singapore) co-locates it
+# with the Supabase DB in ap-southeast-1 to cut query round-trips.
+#
+# The image is built from the repo Dockerfile (Bun; runs migrations then
+# `bun dist/server.js` via backend/entrypoint.sh).
+
+app = "dashchat-backend"
+primary_region = "sin"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  NODE_ENV = "production"
+  # The server reads process.env.PORT; match Fly's internal_port below.
+  PORT = "8080"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  # Keep at least one machine running so there is NO cold start (the whole point
+  # of moving off Render's sleeping free tier). auto_stop would re-introduce it.
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 200
+    hard_limit = 250
+
+# Liveness check hits the existing health route.
+[[http_service.checks]]
+  grace_period = "10s"
+  interval = "15s"
+  method = "GET"
+  path = "/"
+  timeout = "5s"
+
+[[vm]]
+  # Smallest always-on size; fits the free allowance. Bump memory if Prisma +
+  # sharp need more headroom.
+  size = "shared-cpu-1x"
+  memory = "512mb"
