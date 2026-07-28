@@ -14,9 +14,56 @@ import { getSession, signOut } from "next-auth/react";
 // resource clients (userApi/chatApi/messageApi) must be a "use client" component.
 export const apiClient: AxiosInstance = axios.create();
 
+// getSession() does a NETWORK fetch to /api/auth/session every call — calling it
+// per request adds a round-trip to every API interaction. The Argus access token
+// is stable between refreshes, so we cache the resolved session for a short TTL.
+//
+// TTL is 5 min — matching Argus's own session cookie cache (auth.ts cookieCache
+// maxAge). Argus access tokens live 15 min and Auth.js refreshes them 60s before
+// expiry, so a token served up to 5 min stale is still comfortably valid; the
+// self-healing 401 retry below covers the rare rotation-boundary miss.
+//
+// A concurrent burst of requests shares ONE in-flight fetch via the cached
+// promise. We only cache a session that actually carries a token: if the fetch
+// fails OR resolves without an access token, we invalidate immediately so the
+// next request retries rather than reusing a dead session for 5 minutes.
+const SESSION_TTL_MS = 5 * 60_000;
+let cachedSessionAt = 0;
+let cachedSessionPromise: ReturnType<typeof getSession> | null = null;
+
+function getCachedSession(): ReturnType<typeof getSession> {
+  const now = Date.now();
+  if (cachedSessionPromise && now - cachedSessionAt < SESSION_TTL_MS) {
+    return cachedSessionPromise;
+  }
+  cachedSessionAt = now;
+  cachedSessionPromise = getSession()
+    .then((session) => {
+      // A session with no access token is useless to cache — drop it so the
+      // next call refetches instead of serving nothing for the whole TTL.
+      if (!session?.accessToken) invalidateSessionCache();
+      return session;
+    })
+    .catch((err) => {
+      // Don't cache a failed fetch — clear so the next call retries.
+      invalidateSessionCache();
+      throw err;
+    });
+  return cachedSessionPromise;
+}
+
+/**
+ * Invalidate the cached session so the next request re-fetches. Call this after
+ * a token refresh / on 401 so a stale cached token isn't reused on the retry.
+ */
+export function invalidateSessionCache(): void {
+  cachedSessionPromise = null;
+  cachedSessionAt = 0;
+}
+
 apiClient.interceptors.request.use(async (config) => {
   try {
-    const session = await getSession();
+    const session = await getCachedSession();
     const token = session?.accessToken;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -41,9 +88,30 @@ apiClient.interceptors.response.use(
   (res) => res,
   async (error) => {
     const status = error?.response?.status;
-    if (status === 401 && typeof window !== "undefined" && !signingOut) {
-      signingOut = true;
-      await signOut({ callbackUrl: "/login" });
+    const config = error?.config;
+
+    if (status === 401 && typeof window !== "undefined") {
+      // A 401 may just mean our CACHED token went stale at a refresh boundary.
+      // Bust the cache and retry the request ONCE with a freshly-fetched
+      // session before concluding the session is truly dead. The `_retried`
+      // flag prevents an infinite loop.
+      if (config && !config._retried) {
+        config._retried = true;
+        invalidateSessionCache();
+        const session = await getCachedSession().catch(() => null);
+        const token = session?.accessToken;
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+          return apiClient(config);
+        }
+      }
+
+      // Retry didn't help (no valid token) — the session is dead. Sign out once
+      // even if several requests 401 together.
+      if (!signingOut) {
+        signingOut = true;
+        await signOut({ callbackUrl: "/login" });
+      }
     }
     return Promise.reject(error);
   },
